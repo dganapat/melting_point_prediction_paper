@@ -24,3 +24,5 @@ All other required packages are installed as dependencies of the above packages.
 
 Once you've installed all the packages you need in your virtual environment, in the terminal in vscode streamlit run mp_prediction_paper.py. A link should be outputted which you can open in a browser window
 
+Notes:
+Some blocks of code are hidden inside "regions". To open them up, just click on the little arrow next to where you see the code #region...
