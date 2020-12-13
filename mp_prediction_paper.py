@@ -168,7 +168,8 @@ if MAKING_NEW_PLOTS:
 #endregion
     ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
 
-###################### Machine Learning Model Code #########################
+
+
 
 r'''
 # Melting Point Prediction for Quinones and Hydroquinones
@@ -379,7 +380,329 @@ r'''
 ## Results and Discussion
 
 ### Machine Learning Model
+'''
 
+###################### Machine Learning Model Code #########################
+# Import parsed data  (after  MP outlier analysis) as dataframes (DON'T EDIT)
+#region
+quinone_ML_data=pd.read_csv('parsed_p_benzoquinone_216.csv')
+hydroquinone_ML_data=pd.read_csv('parsed_p_hydroquinone_204.csv')
+#endregion
+
+## EDIT BELOW HERE - Change working datase for Machine Learning Model ##
+# The 2 choices are "quinone_ML_data" or "hydroquinone_ML_data"
+working_ML_dataset=quinone_ML_data
+# The training set and test set will only re-shuffle if do_featurization is set to true. Otherwise it will use the training and test set as split in the previous run where do_featurization was set to true to avoid the time required to featurize. 
+do_featurization = False
+## EDIT ABOVE HERE - Change working dataset for Machine Learning Model ##
+
+## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
+#region
+
+######
+## Make new features using mordred
+## Need to do on both training and test sets
+######
+
+if do_featurization:
+
+    [trainset,testset]=split_data(working_ML_dataset)
+    # I'm not sure why, but I had to add in the reset_index otherwise fits were really bad. There must be some dependency on the index in the regression calculation though I'm not sure why that would be the case.
+    trainset=trainset.reset_index()
+    testset=testset.reset_index()
+    # convert SMILES to molecule representation in rdkit
+    mols = [Chem.MolFromSmiles(m) for m in trainset.SMILES.tolist() if Chem.MolFromSmiles(m) != None]
+    mols_test = [Chem.MolFromSmiles(m) for m in testset.SMILES.tolist() if Chem.MolFromSmiles(m) != None]
+    
+    # use mordred to get new features
+    calc = Calculator(descriptors, ignore_3D=True)
+    mordredresults = calc.pandas(mols)
+    mordredresults_test= calc.pandas(mols_test)    
+    
+    # add the new features to the dataframe
+    trainset = trainset.join(mordredresults,how='inner')
+    testset = testset.join(mordredresults_test,how='inner')
+
+    if working_ML_dataset.equals(quinone_ML_data):
+        trainset.to_csv('training_featurized_bq.csv',index=False)
+        testset.to_csv('test_featurized_bq.csv',index=False)
+    elif working_ML_dataset.equals(hydroquinone_ML_data):
+        trainset.to_csv('training_featurized_hq.csv',index=False)
+        testset.to_csv('test_featurized_hq.csv',index=False)
+    else:
+        print('Not a valid working dataset')
+
+else:
+    if working_ML_dataset.equals(quinone_ML_data):
+        trainset = pd.read_csv('training_featurized_bq.csv')
+        testset = pd.read_csv('test_featurized_bq.csv')
+    elif working_ML_dataset.equals(hydroquinone_ML_data):
+        trainset = pd.read_csv('training_featurized_hq.csv')
+        testset = pd.read_csv('test_featurized_hq.csv')        
+  
+
+
+######
+## Standardization (want each feature to be a gaussian with zero mean and unit variance)
+######
+
+# drop non-numeric columns and ones for the melting point, so we only have columns of features
+# I don't know why, but LogP caused a problem during the standardization - dropping for now, but have to figure out
+# Now dropping everything but MW from the Reaxys, since we don't have it for the Na and K salts
+columns_to_drop_from_reaxys = ['InChI Key','SMILES','Type of Substance','mp_mean','mp_std','LogP','H Bond Donors','H Bond Acceptors','Rotatable Bonds','TPSA','Lipinski Number','Veber Number']
+
+if working_ML_dataset.equals(quinone_ML_data):
+    columns_to_drop_thatgavetrouble = ['MAXdO','MINdO']
+    # for bq these gave trouble: ['Unnamed: 0','MAXdO','MINdO']
+elif working_ML_dataset.equals(hydroquinone_ML_data):
+    columns_to_drop_thatgavetrouble = []
+
+columns_to_drop = columns_to_drop_from_reaxys + columns_to_drop_thatgavetrouble
+trainset_s = trainset.drop(columns=columns_to_drop)
+testset_s = testset.drop(columns=columns_to_drop)
+
+# drop columns where there is an error from mordred
+#print('Started with '+str(len(trainset_s.columns))+' features')
+trainset_s = trainset_s.select_dtypes(include=['float64','int'])
+#print('After dropping columns with mordred errors, have '+str(len(trainset_s.columns))+' features')
+
+# drop the same columns from the test set
+testset_s = testset_s[trainset_s.columns]
+
+# finally, do the standardization
+X = preprocessing.scale(trainset_s)
+# apply the same standardization to the test set
+scaler = preprocessing.StandardScaler().fit(trainset_s)
+X_test = scaler.transform(testset_s)
+
+######
+## Ridge regression
+######
+
+alpha = 100
+
+y = trainset.mp_mean.tolist()
+y_test = testset.mp_mean.tolist()
+
+rr = Ridge(alpha=alpha)
+rr.fit(X, y)
+w = rr.coef_
+intercept = rr.intercept_
+
+ml_err_train_bq = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
+ml_err_test_bq = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
+ml_err_train_rmse_bq=np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
+ml_err_test_rmse_bq=np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
+#print('Training error: '+str(ml_err_train))
+#print('Test error: '+str(ml_err_test))
+coeffs = pd.DataFrame(data={'label':trainset_s.columns, 'w':w, 'w_abs':np.abs(w)})
+
+#print(coeffs.sort_values(by='w_abs',ascending=False).head(20))
+
+######
+## Plotting
+######
+
+plt.close('all')
+
+# Figure 2 - one plot
+
+plt.figure(figsize=(4,4), dpi=300)
+ax1 = plt.gca()
+ml_plot_train_points=ax1.scatter(y,np.dot(X,w)+intercept,s=5,c='k',alpha=0.7,linewidth=0)
+ax1.plot([-273,2000],[-273,2000],'k--',lw=1)
+ml_plot_test_points=ax1.scatter(y_test,np.dot(X_test,w)+intercept,s=5,c='r',alpha=0.7,linewidth=0)
+
+
+lims = [min(y+y_test)-5,max(y+y_test)+5]
+
+for theaxis in [ax1]:
+    
+    theaxis.set_aspect(1)
+    theaxis.set_xlim(lims)
+    theaxis.set_ylim(lims)
+
+    theaxis.set_xlabel(r"mp data ($^{\circ}$C)")
+    theaxis.set_ylabel("mp predicted ($^{\circ}$C)")
+    
+    for item in ([theaxis.xaxis.label, theaxis.yaxis.label, theaxis.yaxis.get_offset_text(), theaxis.xaxis.get_offset_text()]):
+        item.set_fontsize(12)
+    for item in (theaxis.get_xticklabels() + theaxis.get_yticklabels()):
+        item.set_fontsize(10)
+plt.legend((ml_plot_train_points,ml_plot_test_points),('Training Set','Test Set'))    
+plt.gcf().subplots_adjust(left=0.2,top=0.95,bottom=0.15,right=0.95)
+# plt.savefig(mainfolder+'/ML_potassiated_alpha100_onlymordred.png',format='png',dpi=300)
+
+ml_plot_bq=plt.gcf()
+plt.savefig('ML_BQ_plot.png',dpi=300)
+st.write(ml_plot_bq)
+
+
+#print('Time to Run = ' + str(time.time()-starttime) + ' s')
+
+#endregion
+## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
+
+
+## EDIT BELOW HERE - Change working datase for Machine Learning Model ##
+# The 2 choices are "quinone_ML_data" or "hydroquinone_ML_data"
+working_ML_dataset=hydroquinone_ML_data
+# The training set and test set will only re-shuffle if do_featurization is set to true. Otherwise it will use the training and test set as split in the previous run where do_featurization was set to true to avoid the time required to featurize. 
+do_featurization = False
+## EDIT ABOVE HERE - Change working dataset for Machine Learning Model ##
+
+## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
+#region
+
+######
+## Make new features using mordred
+## Need to do on both training and test sets
+######
+
+if do_featurization:
+
+    [trainset,testset]=split_data(working_ML_dataset)
+    # I'm not sure why, but I had to add in the reset_index otherwise fits were really bad. There must be some dependency on the index in the regression calculation though I'm not sure why that would be the case.
+    trainset=trainset.reset_index()
+    testset=testset.reset_index()
+    # convert SMILES to molecule representation in rdkit
+    mols = [Chem.MolFromSmiles(m) for m in trainset.SMILES.tolist() if Chem.MolFromSmiles(m) != None]
+    mols_test = [Chem.MolFromSmiles(m) for m in testset.SMILES.tolist() if Chem.MolFromSmiles(m) != None]
+    
+    # use mordred to get new features
+    calc = Calculator(descriptors, ignore_3D=True)
+    mordredresults = calc.pandas(mols)
+    mordredresults_test= calc.pandas(mols_test)    
+    
+    # add the new features to the dataframe
+    trainset = trainset.join(mordredresults,how='inner')
+    testset = testset.join(mordredresults_test,how='inner')
+
+    if working_ML_dataset.equals(quinone_ML_data):
+        trainset.to_csv('training_featurized_bq.csv',index=False)
+        testset.to_csv('test_featurized_bq.csv',index=False)
+    elif working_ML_dataset.equals(hydroquinone_ML_data):
+        trainset.to_csv('training_featurized_hq.csv',index=False)
+        testset.to_csv('test_featurized_hq.csv',index=False)
+    else:
+        print('Not a valid working dataset')
+
+else:
+    if working_ML_dataset.equals(quinone_ML_data):
+        trainset = pd.read_csv('training_featurized_bq.csv')
+        testset = pd.read_csv('test_featurized_bq.csv')
+    elif working_ML_dataset.equals(hydroquinone_ML_data):
+        trainset = pd.read_csv('training_featurized_hq.csv')
+        testset = pd.read_csv('test_featurized_hq.csv')        
+  
+
+
+######
+## Standardization (want each feature to be a gaussian with zero mean and unit variance)
+######
+
+# drop non-numeric columns and ones for the melting point, so we only have columns of features
+# I don't know why, but LogP caused a problem during the standardization - dropping for now, but have to figure out
+# Now dropping everything but MW from the Reaxys, since we don't have it for the Na and K salts
+columns_to_drop_from_reaxys = ['InChI Key','SMILES','Type of Substance','mp_mean','mp_std','LogP','H Bond Donors','H Bond Acceptors','Rotatable Bonds','TPSA','Lipinski Number','Veber Number']
+
+if working_ML_dataset.equals(quinone_ML_data):
+    columns_to_drop_thatgavetrouble = ['MAXdO','MINdO']
+    # for bq these gave trouble: ['Unnamed: 0','MAXdO','MINdO']
+elif working_ML_dataset.equals(hydroquinone_ML_data):
+    columns_to_drop_thatgavetrouble = []
+
+columns_to_drop = columns_to_drop_from_reaxys + columns_to_drop_thatgavetrouble
+trainset_s = trainset.drop(columns=columns_to_drop)
+testset_s = testset.drop(columns=columns_to_drop)
+
+# drop columns where there is an error from mordred
+#print('Started with '+str(len(trainset_s.columns))+' features')
+trainset_s = trainset_s.select_dtypes(include=['float64','int'])
+#print('After dropping columns with mordred errors, have '+str(len(trainset_s.columns))+' features')
+
+# drop the same columns from the test set
+testset_s = testset_s[trainset_s.columns]
+
+# finally, do the standardization
+X = preprocessing.scale(trainset_s)
+# apply the same standardization to the test set
+scaler = preprocessing.StandardScaler().fit(trainset_s)
+X_test = scaler.transform(testset_s)
+
+######
+## Ridge regression
+######
+
+alpha = 100
+
+y = trainset.mp_mean.tolist()
+y_test = testset.mp_mean.tolist()
+
+rr = Ridge(alpha=alpha)
+rr.fit(X, y)
+w = rr.coef_
+intercept = rr.intercept_
+
+ml_err_train_hq = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
+ml_err_test_hq = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
+ml_err_train_rmse_hq=np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
+ml_err_test_rmse_hq=np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
+#print('Training error: '+str(ml_err_train))
+#print('Test error: '+str(ml_err_test))
+
+
+coeffs = pd.DataFrame(data={'label':trainset_s.columns, 'w':w, 'w_abs':np.abs(w)})
+
+#print(coeffs.sort_values(by='w_abs',ascending=False).head(20))
+
+
+######
+## Plotting
+######
+
+plt.close('all')
+
+# Figure 2 - one plot
+
+plt.figure(figsize=(4,4), dpi=300)
+ax1 = plt.gca()
+ml_plot_train_points=ax1.scatter(y,np.dot(X,w)+intercept,s=5,c='k',alpha=0.7,linewidth=0)
+ax1.plot([-273,2000],[-273,2000],'k--',lw=1)
+ml_plot_test_points=ax1.scatter(y_test,np.dot(X_test,w)+intercept,s=5,c='r',alpha=0.7,linewidth=0)
+
+
+lims = [min(y+y_test)-5,max(y+y_test)+5]
+
+for theaxis in [ax1]:
+    
+    theaxis.set_aspect(1)
+    theaxis.set_xlim(lims)
+    theaxis.set_ylim(lims)
+
+    theaxis.set_xlabel(r"mp data ($^{\circ}$C)")
+    theaxis.set_ylabel("mp predicted ($^{\circ}$C)")
+    
+    for item in ([theaxis.xaxis.label, theaxis.yaxis.label, theaxis.yaxis.get_offset_text(), theaxis.xaxis.get_offset_text()]):
+        item.set_fontsize(12)
+    for item in (theaxis.get_xticklabels() + theaxis.get_yticklabels()):
+        item.set_fontsize(10)
+plt.legend((ml_plot_train_points,ml_plot_test_points),('Training Set','Test Set'))    
+plt.gcf().subplots_adjust(left=0.2,top=0.95,bottom=0.15,right=0.95)
+# plt.savefig(mainfolder+'/ML_potassiated_alpha100_onlymordred.png',format='png',dpi=300)
+
+ml_plot_hq=plt.gcf()
+plt.savefig('ML_HQ_plot.png',dpi=300)
+st.write(ml_plot_hq)
+
+
+#print('Time to Run = ' + str(time.time()-starttime) + ' s')
+
+#endregion
+## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
+
+
+r'''
 ### Thermodynamics-Based Model
 The quinone and hydroquinone datasets were initially fitted to the model independently (thus generating different values for a, b, c,...) to reflect the assumption that the strength of the dipole-dipole interaction varies between quinones and hydroquinones. This assumption will be evaluated and discussed later in the paper. They were later also combined into one dataset and fitted together to generate one model.
 
@@ -554,7 +877,7 @@ else:
     st.image(hq_plot,caption='VBT model assuming dipole-dipole interaction for hydroquinone dataset.',use_column_width=True)
 
 r'''
-We note that there appears to be a systematic underestimation of the melting points of the higher $T_m$ and an overestimate of the melting points of the lower $T_m$ molecules. We attribute this systematic error to our model for enthalpy. By using all of the molecules in the dataset to generate one set of fitted parameters, we are effectively forcing the assumption that all molecules have the same types of intermolecular interactions. However, this is unlikely true, as the higher melting molecules likely have stronger intermolecular interactions (perhaps hydrogen bonding), and thus should have higher enthalpies of melting. By combining different types of quinones molecules in this way, we are essentially taking an intermediate strength of intermolecular interaction and applying it to all the molecules in the dataset, which results in the over- and under- estimation that we see in our data. This was verified by analyzing the types of molecules on both ends of the spectrum to see if there were obvious reasons why the higher melting compounds might have stronger interactions and the lower melting compounds would have weaker interactions.
+We note that there appears to be a systematic underestimation of the melting points of the higher $T_m$ and an overestimate of the melting points of the lower $T_m$ molecules. We attribute this systematic error to our model for enthalpy. By using all of the molecules in the dataset to generate one set of fitted parameters, we are effectively assuming that all molecules have the same types of intermolecular interactions. However, this is unlikely true, as the higher melting molecules most likely have stronger intermolecular interactions (perhaps hydrogen bonding), and thus should have higher enthalpies of melting. By combining different types of quinones molecules in this way, we are essentially taking an intermediate strength of intermolecular interaction and applying it to all the molecules in the dataset, which results in the over- and under- estimation that we see in our data. This was verified by analyzing the types of molecules on both ends of the spectrum to see if there were obvious reasons why the higher melting compounds might have stronger interactions and the lower melting compounds would have weaker interactions.
 
 
 
@@ -568,7 +891,7 @@ r'''
 
 All of the data for this method was downloaded from the Reaxys database online (reaxys.com). For each of the quinone and hydroquinone datasets, a substructure search was performed with a structure editor query (benzoquinone example shown below in Figure \cite{bq_reaxys_search}). We limited our search to compounds witha molecular weight of less than 216 g/mol for the quinone-based molecules and 204 g/mol for the hydroquinone-based molecules. We then filtered the data by compounds which had melting points available from literature, and downloaded them using Reaxys's download feature.
 
-Once all the compounds were downloaded we had to further process the data for molecules that had multiple reported melting points.
+Once all the compounds were downloaded we had to further process the data for molecules that had multiple reported melting points. The Tietjen-Moore outlier test was employed to determine whether there were any outliers in the set of melting point data for each molecule, and remove outliers if they did exist. This test requires an initial hypothesis for how many outliers exist in the dataset, so we incrementally increased the hypothesized number of outliers until the range was less than 15 C, or we had thrown out more than half of the melting points in the set. If we had to eliminate more than half the melting points (outlier test failed), we removed that molecule from our dataset.
 
 ### Thermodynamics-Based Model
 
