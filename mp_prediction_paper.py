@@ -18,6 +18,8 @@ from sklearn.linear_model import Ridge
 from matplotlib import gridspec
 from PIL import Image
 
+###################### Thermodynamics-Based Model Code #########################
+
 ## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
 #region
 # Helper Functions that will be used 
@@ -157,7 +159,7 @@ if MAKING_NEW_PLOTS:
                 rmse_err[0]=rmse_err[0]+rmse((fit_tm_model_err(dataset_test,letters_in_use)),dataset_test['T_m (K)'])/(number_of_runs)
                 rmse_err[1]=rmse_err[1]+rmse((fit_tm_model_err(dataset_train,letters_in_use)),dataset_train['T_m (K)'])/(number_of_runs)
 
-        print(rmse_err)
+        #print(rmse_err)
         ax= (make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err))
         
         plots[i]= ax
@@ -166,7 +168,7 @@ if MAKING_NEW_PLOTS:
 #endregion
     ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
 
-
+###################### Machine Learning Model Code #########################
 
 r'''
 # Melting Point Prediction for Quinones and Hydroquinones
@@ -188,7 +190,8 @@ In this study, two different computational approaches were developed to predict 
 
 '''
 # Introduction
-'''
+
+r'''
 ## Introduction
 
 Quinone- and hydroquinone-based molecules have gathered attention recently as electrolyte candidate molecules for redox flow batteries, among other applications\cite{Shimizu2017,Kwabi2018,Goulet2019}. Our group has recently proposed using a eutectic mixture of benzoquinone-based molecules as a high energy density positive electrolyte for flow batteries that remains liquid at room temperature. In order to identify promising materials for this application, knowing the melting temperatures of the quinone and hydroquinone molecules is essential. With the model we have developed, the melting points of the pure component quinones and hydroquinones can be used to predict the melting point of a eutectic mixture. However, melting data is not available for all the quinones and hydroquinones of interest. To address this challenge, we developed a computational model that can be used to predict the melting points of quinone and hydroquinone molecules that are not available in literature. 
@@ -204,7 +207,7 @@ r'''
 
 ### Machine Learning Model
 
-For the traditional machine learning approach, we used the Mordred molecular descriptor calculated to featurize our quinone and hydroquinone based molecules using just the chemical SMILES string as the input
+For the more traditional machine learning approach, we used the Mordred molecular descriptor calculator (available as a python package) to featurize our quinone and hydroquinone based molecules using just the chemical SMILES string as the input \cite{Moriwaki2018}. This generated approximately 1000 usable features for each molecule. After generating the features, they were then standardized so that each feature was a gaussian with zero mean and unit variance. The standardization was applied independently to the training set and test set. The standardized features were then used in a ridge regression ($\alpha=100$) to generate the melting point prediction model. 
 
 ### Thermodynamics-Based Model
 
@@ -267,9 +270,9 @@ $$
 where the parameters $a, b, c....$ will be different values from before.
 
 '''
-# This is where we need to start inserting plots. I'm going to copy and paste the code from Wunmi's T_m code, and modify it to be just for hydrocarbons, Vm^(-2)
+
 # Hydrocarbon plot
-MAKING_NEW_PLOTS=False
+MAKING_NEW_PLOTS=True
 if MAKING_NEW_PLOTS:
     ## EDIT BELOW HERE
     ### Change datasets used, model form, starting guesses
@@ -295,7 +298,6 @@ if MAKING_NEW_PLOTS:
     #region
     num_predictors= list(range(len(findstr(model_form, 'predictors'))))
     used_predictors= []
-
     for i in range(len(all_possible_predictors)):
         this_predictor= all_possible_predictors[i]
         if findstr(model_form, this_predictor):
@@ -309,6 +311,7 @@ if MAKING_NEW_PLOTS:
     letters_in_use=letters_in_use[0:num_parameters]
     num_parameters= list(range(num_parameters))
 
+    
     plots=list(range(num_datasets))
     fig = plt.figure()      
     for i in range(num_datasets):
@@ -316,6 +319,7 @@ if MAKING_NEW_PLOTS:
         rmse_err=[0,0]
         number_of_runs=5
         count=0
+        hc_parameters=np.zeros((number_of_runs,len(num_parameters)))
         while count < number_of_runs:
             dataset= datasets[i]
             pd.set_option("display.max_rows", None, "display.max_columns", None)
@@ -329,6 +333,8 @@ if MAKING_NEW_PLOTS:
             if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
             -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs) and letters_in_use[0]<0:
                 #st.write(letters_in_use)
+                hc_parameters[count,:]=letters_in_use
+                
                 avg_model_err[0]=avg_model_err[0]+(statistics.mean(np.absolute(fit_tm_model_err
                 (dataset_test,letters_in_use)-dataset_test['T_m (K)']))/(number_of_runs))
                 avg_model_err[1]=avg_model_err[1]+(statistics.mean(np.absolute(fit_tm_model_err
@@ -380,7 +386,7 @@ The quinone and hydroquinone datasets were initially fitted to the model indepen
 We tested several different functional forms for the numerator, but found that $V_m^{-1}$ consistently yielded the lowest errors. We calculated both the average absolute error (which has been reported in other melting point prediction literature\cite{Preiss2011}) and the root mean square error, which is commonly used in machine learning approaches\cite{Nigsch2006}.
 '''
 # Quinone Plot
-MAKING_NEW_PLOTS=False
+MAKING_NEW_PLOTS=True
 if MAKING_NEW_PLOTS:
     ## EDIT BELOW HERE
     ### Change datasets used, model form, starting guesses
@@ -396,7 +402,7 @@ if MAKING_NEW_PLOTS:
 
     # CHANGE STARTING GUESSES HERE
     # Note: You must have the correct number of starting guesses to match the number of parameters in the model form, and you must also have the correct number of sets of starting guesses depending how many datasets you're testing at once.
-    starting_guesses= [[-1e+01,3e+02,-1e-01,2e-02,-8e-02,-3e-02]]
+    starting_guesses= [[-1e+01,3e+02,-1e-01,1e-02,-8e-02,-3e-02]]
 
     #endregion
     ## EDIT ABOVE HERE
@@ -426,6 +432,7 @@ if MAKING_NEW_PLOTS:
         rmse_err=[0,0]
         number_of_runs=5
         count=0
+        bq_parameters=np.zeros((number_of_runs,len(num_parameters)))
         while count < number_of_runs:
             dataset= datasets[i]
             pd.set_option("display.max_rows", None, "display.max_columns", None)
@@ -439,6 +446,7 @@ if MAKING_NEW_PLOTS:
             if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
             -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs) and letters_in_use[0]<0:
                 #st.write(letters_in_use)
+                bq_parameters[count,:]=letters_in_use
                 avg_model_err[0]=avg_model_err[0]+(statistics.mean(np.absolute(fit_tm_model_err
                 (dataset_test,letters_in_use)-dataset_test['T_m (K)']))/(number_of_runs))
                 avg_model_err[1]=avg_model_err[1]+(statistics.mean(np.absolute(fit_tm_model_err
@@ -447,7 +455,6 @@ if MAKING_NEW_PLOTS:
                 rmse_err[0]=rmse_err[0]+rmse((fit_tm_model_err(dataset_test,letters_in_use)),dataset_test['T_m (K)'])/(number_of_runs)
                 rmse_err[1]=rmse_err[1]+rmse((fit_tm_model_err(dataset_train,letters_in_use)),dataset_train['T_m (K)'])/(number_of_runs)
 
-        print(rmse_err)
         ax= (make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err))
         
         plots[i]= ax
@@ -464,7 +471,7 @@ else:
     st.image(bq_plot,caption='VBT model assuming dipole-dipole interaction for quinone dataset.',use_column_width=True)
 
 # Hydroquinone Plot
-MAKING_NEW_PLOTS=False
+MAKING_NEW_PLOTS=True
 if MAKING_NEW_PLOTS:
     ## EDIT BELOW HERE
     ### Change datasets used, model form, starting guesses
@@ -510,6 +517,7 @@ if MAKING_NEW_PLOTS:
         rmse_err=[0,0]
         number_of_runs=5
         count=0
+        hq_parameters=np.zeros((number_of_runs,len(num_parameters)))
         while count < number_of_runs:
             dataset= datasets[i]
             pd.set_option("display.max_rows", None, "display.max_columns", None)
@@ -523,6 +531,7 @@ if MAKING_NEW_PLOTS:
             if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
             -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs) and letters_in_use[0]<0:
                 #st.write(letters_in_use)
+                hq_parameters[count,:]=letters_in_use
                 avg_model_err[0]=avg_model_err[0]+(statistics.mean(np.absolute(fit_tm_model_err
                 (dataset_test,letters_in_use)-dataset_test['T_m (K)']))/(number_of_runs))
                 avg_model_err[1]=avg_model_err[1]+(statistics.mean(np.absolute(fit_tm_model_err
@@ -544,7 +553,7 @@ else:
     hq_plot=Image.open('HQ_plot.png')
     st.image(hq_plot,caption='VBT model assuming dipole-dipole interaction for hydroquinone dataset.',use_column_width=True)
 
-'''
+r'''
 We note that there appears to be a systematic underestimation of the melting points of the higher $T_m$ and an overestimate of the melting points of the lower $T_m$ molecules. We attribute this systematic error to our model for enthalpy. By using all of the molecules in the dataset to generate one set of fitted parameters, we are effectively forcing the assumption that all molecules have the same types of intermolecular interactions. However, this is unlikely true, as the higher melting molecules likely have stronger intermolecular interactions (perhaps hydrogen bonding), and thus should have higher enthalpies of melting. By combining different types of quinones molecules in this way, we are essentially taking an intermediate strength of intermolecular interaction and applying it to all the molecules in the dataset, which results in the over- and under- estimation that we see in our data. This was verified by analyzing the types of molecules on both ends of the spectrum to see if there were obvious reasons why the higher melting compounds might have stronger interactions and the lower melting compounds would have weaker interactions.
 
 
@@ -552,17 +561,29 @@ We note that there appears to be a systematic underestimation of the melting poi
 Upon observing the similarities between the parameters for the quinone and hydroquinone models, we combined both into a single dataset and fit a new model - the combined Quinone+Hydroquinone dataset. 
 '''
 # Experimental Section
-'''
+r'''
 ## Experimental
 
 ### Machine Learning Model
 
-All of the data for this method was downloaded from the Reaxys database online (reaxys.com). For each of the quinone and hydroquinone datasets, a substructure search was performed 
+All of the data for this method was downloaded from the Reaxys database online (reaxys.com). For each of the quinone and hydroquinone datasets, a substructure search was performed with a structure editor query (benzoquinone example shown below in Figure \cite{bq_reaxys_search}). We limited our search to compounds witha molecular weight of less than 216 g/mol for the quinone-based molecules and 204 g/mol for the hydroquinone-based molecules. We then filtered the data by compounds which had melting points available from literature, and downloaded them using Reaxys's download feature.
+
+Once all the compounds were downloaded we had to further process the data for molecules that had multiple reported melting points.
 
 ### Thermodynamics-Based Model
 
 
 '''
+
+hc_parameters_df=pd.DataFrame(data=hc_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
+bq_parameters_df=pd.DataFrame(data=bq_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
+hq_parameters_df=pd.DataFrame(data=hq_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
+st.markdown('''### Hydrocarbon Parameters ''')
+st.write(hc_parameters_df)
+st.markdown('''### Quinone Parameters ''')
+st.write(bq_parameters_df)
+st.markdown('''### Hydroquinone Parameters ''')
+st.write(hq_parameters_df)
 
 # How to put code in markdown using python formatting
     # '''
@@ -573,5 +594,8 @@ All of the data for this method was downloaded from the Reaxys database online (
     # '''
 
 # Questions for Antonio:
-    # How did you split the datasets into training and test sets?
+    # How did you split the datasets into training and test sets? I didn't see where this happens in the code
     # Do you use any of the functions in the helper_functions.py file? I couldn't find them in either parse_reaxys_data or featurization_regression.py
+
+# To do:
+    # Re-split training and test set for ML approach and re-write so that it re-shuffles on every run of the code
