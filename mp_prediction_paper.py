@@ -16,6 +16,7 @@ from mordred import Calculator, descriptors
 from sklearn import preprocessing
 from sklearn.linear_model import Ridge
 from matplotlib import gridspec
+from PIL import Image
 
 ## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
 #region
@@ -87,7 +88,7 @@ predicted= ['T_m (K)']
 #endregion
 ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
 
-MAKING_NEW_PLOTS=True
+MAKING_NEW_PLOTS=False
 
 if MAKING_NEW_PLOTS:
     ## EDIT BELOW HERE
@@ -203,6 +204,8 @@ r'''
 
 ### Machine Learning Model
 
+For the traditional machine learning approach, we used the Mordred molecular descriptor calculated to featurize our quinone and hydroquinone based molecules using just the chemical SMILES string as the input
+
 ### Thermodynamics-Based Model
 
 We begin with the fundamental thermodynamic equation for melting temperature: 
@@ -256,10 +259,17 @@ $$
     T_m=\frac{g*V_m^{-2}+h}{a*\textrm{ln}\sigma + b*\tau + c*\textrm{ln}\epsilon_{ar} + d*\textrm{ln}\epsilon_{al} + f}
 $$
 
+With a free constant in both the numerator and the denominator there are infinite possible solutions to the optimization problem. This makes the fitted parameters difficult to compare between different datasets (quinones, hydroquinones, and hydrocarbons). To mitigate this issue, we can normalize the equation by dividing numerator and denominator by one of the constants (this necessarily assumes that the parameter we normalize by is nonzero). Our model then becomes:
+$$
+    T_m=\frac{g*V_m^{-2}+h}{a*\textrm{ln}\sigma + b*\tau + c*\textrm{ln}\epsilon_{ar} + d*\textrm{ln}\epsilon_{al} + 1}
+$$
+
+where the parameters $a, b, c....$ will be different values from before.
+
 '''
 # This is where we need to start inserting plots. I'm going to copy and paste the code from Wunmi's T_m code, and modify it to be just for hydrocarbons, Vm^(-2)
 # Hydrocarbon plot
-MAKING_NEW_PLOTS=True
+MAKING_NEW_PLOTS=False
 if MAKING_NEW_PLOTS:
     ## EDIT BELOW HERE
     ### Change datasets used, model form, starting guesses
@@ -275,7 +285,7 @@ if MAKING_NEW_PLOTS:
 
     # CHANGE STARTING GUESSES HERE
     # Note: You must have the correct number of starting guesses to match the number of parameters in the model form, and you must also have the correct number of sets of starting guesses depending how many datasets you're testing at once.
-    starting_guesses= [[-4.32603500e+00,2.87801207e+02,-7.93904846e-02,1.22626036e-02,-9.56732927e-02,-4.24685604e-02]]
+    starting_guesses= [[-1.5,1.8e+02,-1e-01,-2e-02,-1.1e-01,-9e-02]]
     # HQ starting guesses: ,[-2.46237655e+01,6.04795762e+02,-6.14060740e-02,4.49395401e-02,3.03647346e-02,3.38981530e-02],[-1.83846686e+01,2.34877509e+02,-1.21714771e-01,-1.30258253e-02,-1.14720566e-01,-1.09430299e-01]
 
     #endregion
@@ -318,7 +328,117 @@ if MAKING_NEW_PLOTS:
             
             if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
             -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs) and letters_in_use[0]<0:
-                #print(letters_in_use)
+                #st.write(letters_in_use)
+                avg_model_err[0]=avg_model_err[0]+(statistics.mean(np.absolute(fit_tm_model_err
+                (dataset_test,letters_in_use)-dataset_test['T_m (K)']))/(number_of_runs))
+                avg_model_err[1]=avg_model_err[1]+(statistics.mean(np.absolute(fit_tm_model_err
+                (dataset_train,letters_in_use)-dataset_train['T_m (K)']))/(number_of_runs))
+                count=count+1
+                rmse_err[0]=rmse_err[0]+rmse((fit_tm_model_err(dataset_test,letters_in_use)),dataset_test['T_m (K)'])/(number_of_runs)
+                rmse_err[1]=rmse_err[1]+rmse((fit_tm_model_err(dataset_train,letters_in_use)),dataset_train['T_m (K)'])/(number_of_runs)
+
+        ax= (make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err))
+        
+        plots[i]= ax
+        #fig=plots[i]
+    plt.gcf()
+    plt.savefig('HC_plot.png',dpi=300)
+    st.write(plots[i])
+#endregion
+    ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
+    # Note: These errors will be wrong if MAKING_NEW_PLOTS = False, because they will just be showing the errors from 
+    st.markdown('''VBT model assuming Van der Waals interaction for hydrocarbon dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C, based on the average over five runs of the model.'''.format(avg_model_err[1],avg_model_err[0],rmse_err[1],rmse_err[0]) )
+else: 
+    hc_plot=Image.open('HC_plot.png')
+    st.image(hc_plot,caption='VBT model assuming Van der Waals interaction for hydrocarbon dataset.',use_column_width=True)
+
+r'''
+Our initial model for enthalpy of melting for the benzoquinone and hydroquinones was:
+$$
+\Delta H_m=g*V_m^{-1}+h
+$$
+
+Resulting in an overall equation of: 
+
+$$
+T_m=\frac{g*V_m^{-1}+h}{a*\textrm{ln}\sigma + b*\tau + c*\textrm{ln}\epsilon_{ar} + d*\textrm{ln}\epsilon_{al} + 1}
+$$
+
+Where we have normalized the constant in the denominator for reasons discussed above. 
+
+'''
+# Results and Discussion
+
+r'''
+## Results and Discussion
+
+### Machine Learning Model
+
+### Thermodynamics-Based Model
+The quinone and hydroquinone datasets were initially fitted to the model independently (thus generating different values for a, b, c,...) to reflect the assumption that the strength of the dipole-dipole interaction varies between quinones and hydroquinones. This assumption will be evaluated and discussed later in the paper. They were later also combined into one dataset and fitted together to generate one model.
+
+We tested several different functional forms for the numerator, but found that $V_m^{-1}$ consistently yielded the lowest errors. We calculated both the average absolute error (which has been reported in other melting point prediction literature\cite{Preiss2011}) and the root mean square error, which is commonly used in machine learning approaches\cite{Nigsch2006}.
+'''
+# Quinone Plot
+MAKING_NEW_PLOTS=False
+if MAKING_NEW_PLOTS:
+    ## EDIT BELOW HERE
+    ### Change datasets used, model form, starting guesses
+    #region
+    # Change the datasets that you're interested in looking at in this block. Make sure you change the names of the datasets appropriately. Note: All datasets you include here will be tested with the same model form. If you want to test different model forms for different datasets, you will have to test one dataset at a time and change the model form as desired for that single dataset.
+    datasets= [quinone_data]
+    dataset_names= ['Quinone']
+    num_datasets= len(datasets)
+
+    # CHANGE MODEL NAME AND FORM HERE:
+    model_form_name= '$V_m^{-1}$ Numerator, Full Denominator'
+    model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-1)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
+
+    # CHANGE STARTING GUESSES HERE
+    # Note: You must have the correct number of starting guesses to match the number of parameters in the model form, and you must also have the correct number of sets of starting guesses depending how many datasets you're testing at once.
+    starting_guesses= [[-1e+01,3e+02,-1e-01,2e-02,-8e-02,-3e-02]]
+
+    #endregion
+    ## EDIT ABOVE HERE
+
+    ## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
+    #region
+    num_predictors= list(range(len(findstr(model_form, 'predictors'))))
+    used_predictors= []
+
+    for i in range(len(all_possible_predictors)):
+        this_predictor= all_possible_predictors[i]
+        if findstr(model_form, this_predictor):
+            used_predictors.append(this_predictor)
+    used_predictors= used_predictors+predicted
+    num_parameters= len(findstr(model_form, 'parameter'))
+
+    if num_parameters!=len(starting_guesses[0]):
+        raise Exception("Number of starting guesses doesn't match the number of parameters")
+
+    letters_in_use=letters_in_use[0:num_parameters]
+    num_parameters= list(range(num_parameters))
+
+    plots=list(range(num_datasets))
+    fig = plt.figure()      
+    for i in range(num_datasets):
+        avg_model_err=[0,0]
+        rmse_err=[0,0]
+        number_of_runs=5
+        count=0
+        while count < number_of_runs:
+            dataset= datasets[i]
+            pd.set_option("display.max_rows", None, "display.max_columns", None)
+            dataset_name=dataset_names[i]
+            dataset_length= len(dataset)
+            predictors= dataset[used_predictors].loc[2:dataset_length]
+            predictors= predictors.astype('float64')
+            [dataset_train,dataset_test]=split_data(predictors)
+            (letters_in_use,_)=opt.curve_fit(fit_tm_model,dataset_train,dataset_train['T_m (K)'],(starting_guesses[i]))
+            
+            if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
+            -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs) and letters_in_use[0]<0:
+                #st.write(letters_in_use)
                 avg_model_err[0]=avg_model_err[0]+(statistics.mean(np.absolute(fit_tm_model_err
                 (dataset_test,letters_in_use)-dataset_test['T_m (K)']))/(number_of_runs))
                 avg_model_err[1]=avg_model_err[1]+(statistics.mean(np.absolute(fit_tm_model_err
@@ -331,30 +451,116 @@ if MAKING_NEW_PLOTS:
         ax= (make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err))
         
         plots[i]= ax
-
+        #fig=plots[i]
+    plt.gcf()
+    plt.savefig('BQ_plot.png',dpi=300)
     st.write(plots[i])
 #endregion
     ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
 
-st.markdown('''VBT model assuming Van der Waals interaction for hydrocarbon dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C, based on the average over five runs of the model.'''.format(avg_model_err[1],avg_model_err[0],rmse_err[1],rmse_err[0]) )
+    st.markdown('''VBT model assuming dipole-dipole interaction for quinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C, based on the average over five runs of the model.'''.format(avg_model_err[1],avg_model_err[0],rmse_err[1],rmse_err[0]) )
+else: 
+    bq_plot=Image.open('BQ_plot.png')
+    st.image(bq_plot,caption='VBT model assuming dipole-dipole interaction for quinone dataset.',use_column_width=True)
 
-r'''
-Our initial model for enthalpy of melting for the benzoquinone and hydroquinones was:
-$$
-\Delta H_m=g*V_m^{-1}+h
-$$
+# Hydroquinone Plot
+MAKING_NEW_PLOTS=False
+if MAKING_NEW_PLOTS:
+    ## EDIT BELOW HERE
+    ### Change datasets used, model form, starting guesses
+    #region
+    # Change the datasets that you're interested in looking at in this block. Make sure you change the names of the datasets appropriately. Note: All datasets you include here will be tested with the same model form. If you want to test different model forms for different datasets, you will have to test one dataset at a time and change the model form as desired for that single dataset.
+    datasets= [hydroquinone_data]
+    dataset_names= ['Hydroquinone']
+    num_datasets= len(datasets)
 
-Resulting in an overall equation of: 
-$$
-T_m=\frac{g*V_m^{-1}+h}{a*\textrm{ln}\sigma + b*\tau + c*\textrm{ln}\epsilon_{ar} + d*\textrm{ln}\epsilon_{al} + f}
-$$
+    # CHANGE MODEL NAME AND FORM HERE:
+    model_form_name= '$V_m^{-1}$ Numerator, Full Denominator'
+    model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-1)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
 
-With a free constant in both the numerator and the denominator there are infinite possible solutions to the optimization problem. This makes the fitted parameters difficult to compare between different datasets (quinones, hydroquinones, and hydrocarbons). To mitigate this issue, we can normalize the equation by dividing numerator and denominator by one of the constants (this necessarily assumes that the parameter we normalize by is nonzero). Our model then becomes:
+    # CHANGE STARTING GUESSES HERE
+    # Note: You must have the correct number of starting guesses to match the number of parameters in the model form, and you must also have the correct number of sets of starting guesses depending how many datasets you're testing at once.
+    starting_guesses= [[-2e+01,5e+02,-7e-02,3e-02,2e-02,2e-02]]
 
-$$
-T_m=\frac{g*V_m^{-1}+h}{a*\textrm{ln}\sigma + b*\tau + c*\textrm{ln}\epsilon_{ar} + d*\textrm{ln}\epsilon_{al} + 1}
-$$
-where the parameters a, b, c.... will be different values from before.
+    #endregion
+    ## EDIT ABOVE HERE
+
+    ## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
+    #region
+    num_predictors= list(range(len(findstr(model_form, 'predictors'))))
+    used_predictors= []
+
+    for i in range(len(all_possible_predictors)):
+        this_predictor= all_possible_predictors[i]
+        if findstr(model_form, this_predictor):
+            used_predictors.append(this_predictor)
+    used_predictors= used_predictors+predicted
+    num_parameters= len(findstr(model_form, 'parameter'))
+
+    if num_parameters!=len(starting_guesses[0]):
+        raise Exception("Number of starting guesses doesn't match the number of parameters")
+
+    letters_in_use=letters_in_use[0:num_parameters]
+    num_parameters= list(range(num_parameters))
+
+    plots=list(range(num_datasets))
+    fig = plt.figure()      
+    for i in range(num_datasets):
+        avg_model_err=[0,0]
+        rmse_err=[0,0]
+        number_of_runs=5
+        count=0
+        while count < number_of_runs:
+            dataset= datasets[i]
+            pd.set_option("display.max_rows", None, "display.max_columns", None)
+            dataset_name=dataset_names[i]
+            dataset_length= len(dataset)
+            predictors= dataset[used_predictors].loc[2:dataset_length]
+            predictors= predictors.astype('float64')
+            [dataset_train,dataset_test]=split_data(predictors)
+            (letters_in_use,_)=opt.curve_fit(fit_tm_model,dataset_train,dataset_train['T_m (K)'],(starting_guesses[i]))
+            
+            if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
+            -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs) and letters_in_use[0]<0:
+                #st.write(letters_in_use)
+                avg_model_err[0]=avg_model_err[0]+(statistics.mean(np.absolute(fit_tm_model_err
+                (dataset_test,letters_in_use)-dataset_test['T_m (K)']))/(number_of_runs))
+                avg_model_err[1]=avg_model_err[1]+(statistics.mean(np.absolute(fit_tm_model_err
+                (dataset_train,letters_in_use)-dataset_train['T_m (K)']))/(number_of_runs))
+                count=count+1
+                rmse_err[0]=rmse_err[0]+rmse((fit_tm_model_err(dataset_test,letters_in_use)),dataset_test['T_m (K)'])/(number_of_runs)
+                rmse_err[1]=rmse_err[1]+rmse((fit_tm_model_err(dataset_train,letters_in_use)),dataset_train['T_m (K)'])/(number_of_runs)
+
+        ax= (make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err))
+        plots[i]= ax
+    plt.gcf()
+    plt.savefig('HQ_plot.png',dpi=300)
+    st.write(plots[i])
+#endregion
+    ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
+
+    st.markdown('''VBT model assuming dipole-dipole interaction for hydroquinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C, based on the average over five runs of the model.'''.format(avg_model_err[1],avg_model_err[0],rmse_err[1],rmse_err[0]) )
+else: 
+    hq_plot=Image.open('HQ_plot.png')
+    st.image(hq_plot,caption='VBT model assuming dipole-dipole interaction for hydroquinone dataset.',use_column_width=True)
+
+'''
+We note that there appears to be a systematic underestimation of the melting points of the higher $T_m$ and an overestimate of the melting points of the lower $T_m$ molecules. We attribute this systematic error to our model for enthalpy. By using all of the molecules in the dataset to generate one set of fitted parameters, we are effectively forcing the assumption that all molecules have the same types of intermolecular interactions. However, this is unlikely true, as the higher melting molecules likely have stronger intermolecular interactions (perhaps hydrogen bonding), and thus should have higher enthalpies of melting. By combining different types of quinones molecules in this way, we are essentially taking an intermediate strength of intermolecular interaction and applying it to all the molecules in the dataset, which results in the over- and under- estimation that we see in our data. This was verified by analyzing the types of molecules on both ends of the spectrum to see if there were obvious reasons why the higher melting compounds might have stronger interactions and the lower melting compounds would have weaker interactions.
+
+
+
+Upon observing the similarities between the parameters for the quinone and hydroquinone models, we combined both into a single dataset and fit a new model - the combined Quinone+Hydroquinone dataset. 
+'''
+# Experimental Section
+'''
+## Experimental
+
+### Machine Learning Model
+
+All of the data for this method was downloaded from the Reaxys database online (reaxys.com). For each of the quinone and hydroquinone datasets, a substructure search was performed 
+
+### Thermodynamics-Based Model
+
 
 '''
 
