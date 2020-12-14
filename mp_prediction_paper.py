@@ -389,6 +389,7 @@ quinone_ML_data=pd.read_csv('parsed_p_benzoquinone_216.csv')
 hydroquinone_ML_data=pd.read_csv('parsed_p_hydroquinone_204.csv')
 #endregion
 
+##### QUINONE ML  PLOT #########
 ## EDIT BELOW HERE - Change working datase for Machine Learning Model ##
 # The 2 choices are "quinone_ML_data" or "hydroquinone_ML_data"
 working_ML_dataset=quinone_ML_data
@@ -552,6 +553,8 @@ elif working_ML_dataset.equals(hydroquinone_ML_data):
 
 #endregion
 ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
+
+######### HYDROQUINONE ML PLOT ############## 
 
 working_ML_dataset=hydroquinone_ML_data
 # The training set and test set will only re-shuffle if do_featurization is set to true. Otherwise it will use the training and test set as split in the previous run where do_featurization was set to true to avoid the time required to featurize. 
@@ -896,6 +899,89 @@ We note that there appears to be a systematic underestimation of the melting poi
 
 Upon observing the similarities between the parameters for the quinone and hydroquinone models, we combined both into a single dataset and fit a new model - the combined Quinone+Hydroquinone dataset. 
 '''
+
+MAKING_NEW_PLOTS=True
+if MAKING_NEW_PLOTS:
+    ## EDIT BELOW HERE
+    ### Change datasets used, model form, starting guesses
+    #region
+    # Change the datasets that you're interested in looking at in this block. Make sure you change the names of the datasets appropriately. Note: All datasets you include here will be tested with the same model form. If you want to test different model forms for different datasets, you will have to test one dataset at a time and change the model form as desired for that single dataset.
+    datasets= [mega_database]
+    dataset_names= ['Quinones + Hydroquinones']
+    num_datasets= len(datasets)
+
+    # CHANGE MODEL NAME AND FORM HERE:
+    model_form_name= '$V_m^{-1}$ Numerator, Full Denominator'
+    model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-1)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
+
+    # CHANGE STARTING GUESSES HERE
+    # Note: You must have the correct number of starting guesses to match the number of parameters in the model form, and you must also have the correct number of sets of starting guesses depending how many datasets you're testing at once.
+    starting_guesses= [[-2e+01,5e+02,-7e-02,3e-02,2e-02,2e-02]]
+
+    #endregion
+    ## EDIT ABOVE HERE
+
+    ## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
+    #region
+    num_predictors= list(range(len(findstr(model_form, 'predictors'))))
+    used_predictors= []
+
+    for i in range(len(all_possible_predictors)):
+        this_predictor= all_possible_predictors[i]
+        if findstr(model_form, this_predictor):
+            used_predictors.append(this_predictor)
+    used_predictors= used_predictors+predicted
+    num_parameters= len(findstr(model_form, 'parameter'))
+
+    if num_parameters!=len(starting_guesses[0]):
+        raise Exception("Number of starting guesses doesn't match the number of parameters")
+
+    letters_in_use=letters_in_use[0:num_parameters]
+    num_parameters= list(range(num_parameters))
+
+    plots=list(range(num_datasets))
+    fig = plt.figure()      
+    for i in range(num_datasets):
+        avg_model_err=[0,0]
+        rmse_err=[0,0]
+        number_of_runs=5
+        count=0
+        bqhq_parameters=np.zeros((number_of_runs,len(num_parameters)))
+        while count < number_of_runs:
+            dataset= datasets[i]
+            pd.set_option("display.max_rows", None, "display.max_columns", None)
+            dataset_name=dataset_names[i]
+            dataset_length= len(dataset)
+            predictors= dataset[used_predictors].loc[2:dataset_length]
+            predictors= predictors.astype('float64')
+            [dataset_train,dataset_test]=split_data(predictors)
+            (letters_in_use,_)=opt.curve_fit(fit_tm_model,dataset_train,dataset_train['T_m (K)'],(starting_guesses[i]))
+            
+            if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
+            -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs) and letters_in_use[0]<0:
+                #st.write(letters_in_use)
+                bqhq_parameters[count,:]=letters_in_use
+                avg_model_err[0]=avg_model_err[0]+(statistics.mean(np.absolute(fit_tm_model_err
+                (dataset_test,letters_in_use)-dataset_test['T_m (K)']))/(number_of_runs))
+                avg_model_err[1]=avg_model_err[1]+(statistics.mean(np.absolute(fit_tm_model_err
+                (dataset_train,letters_in_use)-dataset_train['T_m (K)']))/(number_of_runs))
+                count=count+1
+                rmse_err[0]=rmse_err[0]+rmse((fit_tm_model_err(dataset_test,letters_in_use)),dataset_test['T_m (K)'])/(number_of_runs)
+                rmse_err[1]=rmse_err[1]+rmse((fit_tm_model_err(dataset_train,letters_in_use)),dataset_train['T_m (K)'])/(number_of_runs)
+
+        ax= (make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err))
+        plots[i]= ax
+    plt.gcf()
+    plt.savefig('BQHQ_plot.png',dpi=300)
+    st.write(plots[i])
+#endregion
+    ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
+
+    st.markdown('''VBT model assuming dipole-dipole interaction for combined quinone and hydroquinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C, based on the average over five runs of the model.'''.format(avg_model_err[1],avg_model_err[0],rmse_err[1],rmse_err[0]) )
+else: 
+    hq_plot=Image.open('HQ_plot.png')
+    st.image(hq_plot,caption='VBT model assuming dipole-dipole interaction for hydroquinone dataset.',use_column_width=True)
+
 # Experimental Section
 r'''
 ## Experimental
@@ -914,12 +1000,15 @@ Once all the compounds were downloaded we had to further process the data for mo
 hc_parameters_df=pd.DataFrame(data=hc_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
 bq_parameters_df=pd.DataFrame(data=bq_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
 hq_parameters_df=pd.DataFrame(data=hq_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
+bqhq_parameters_df=pd.DataFrame(data=bqhq_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
 st.markdown('''### Hydrocarbon Parameters ''')
 st.write(hc_parameters_df)
 st.markdown('''### Quinone Parameters ''')
 st.write(bq_parameters_df)
 st.markdown('''### Hydroquinone Parameters ''')
 st.write(hq_parameters_df)
+st.markdown('''### Quinone + Hydroquinone Parameters ''')
+st.write(bqhq_parameters_df)
 
 # How to put code in markdown using python formatting
     # '''
