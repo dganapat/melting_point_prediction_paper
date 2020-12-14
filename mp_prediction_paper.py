@@ -489,10 +489,16 @@ rr.fit(X, y)
 w = rr.coef_
 intercept = rr.intercept_
 
-ml_err_train_bq = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
-ml_err_test_bq = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
-ml_err_train_rmse_bq=np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
-ml_err_test_rmse_bq=np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
+if working_ML_dataset.equals(quinone_ML_data):
+    ml_err_train_bq = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
+    ml_err_test_bq = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
+    ml_err_train_rmse_bq=np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
+    ml_err_test_rmse_bq=np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
+elif working_ML_dataset.equals(hydroquinone_ML_data):
+    ml_err_train_hq = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
+    ml_err_test_hq = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
+    ml_err_train_rmse_hq=np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
+    ml_err_test_rmse_hq=np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
 #print('Training error: '+str(ml_err_train))
 #print('Test error: '+str(ml_err_test))
 coeffs = pd.DataFrame(data={'label':trainset_s.columns, 'w':w, 'w_abs':np.abs(w)})
@@ -502,8 +508,6 @@ coeffs = pd.DataFrame(data={'label':trainset_s.columns, 'w':w, 'w_abs':np.abs(w)
 ######
 ## Plotting
 ######
-
-plt.close('all')
 
 # Figure 2 - one plot
 
@@ -533,19 +537,22 @@ plt.legend((ml_plot_train_points,ml_plot_test_points),('Training Set','Test Set'
 plt.gcf().subplots_adjust(left=0.2,top=0.95,bottom=0.15,right=0.95)
 # plt.savefig(mainfolder+'/ML_potassiated_alpha100_onlymordred.png',format='png',dpi=300)
 
-ml_plot_bq=plt.gcf()
-plt.savefig('ML_BQ_plot.png',dpi=300)
-st.write(ml_plot_bq)
-
+if working_ML_dataset.equals(quinone_ML_data):
+    ml_plot_bq=plt.gcf()
+    plt.savefig('ML_BQ_plot.png',dpi=300)
+    st.write(ml_plot_bq)
+    st.markdown('''ML model for quinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C.'''.format(ml_err_train_bq,ml_err_test_bq,ml_err_train_rmse_bq,ml_err_test_rmse_bq) )
+elif working_ML_dataset.equals(hydroquinone_ML_data):
+    ml_plot_hq=plt.gcf()
+    plt.savefig('ML_HQ_plot.png',dpi=300)
+    st.write(ml_plot_hq)
+    st.markdown('''ML model for hydroquinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C.'''.format(ml_err_train_hq,ml_err_test_hq,ml_err_train_rmse_hq,ml_err_test_rmse_hq) )
 
 #print('Time to Run = ' + str(time.time()-starttime) + ' s')
 
 #endregion
 ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
 
-
-## EDIT BELOW HERE - Change working datase for Machine Learning Model ##
-# The 2 choices are "quinone_ML_data" or "hydroquinone_ML_data"
 working_ML_dataset=hydroquinone_ML_data
 # The training set and test set will only re-shuffle if do_featurization is set to true. Otherwise it will use the training and test set as split in the previous run where do_featurization was set to true to avoid the time required to featurize. 
 do_featurization = False
@@ -644,24 +651,25 @@ rr.fit(X, y)
 w = rr.coef_
 intercept = rr.intercept_
 
-ml_err_train_hq = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
-ml_err_test_hq = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
-ml_err_train_rmse_hq=np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
-ml_err_test_rmse_hq=np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
+if working_ML_dataset.equals(quinone_ML_data):
+    ml_err_train_bq = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
+    ml_err_test_bq = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
+    ml_err_train_rmse_bq=np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
+    ml_err_test_rmse_bq=np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
+elif working_ML_dataset.equals(hydroquinone_ML_data):
+    ml_err_train_hq = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
+    ml_err_test_hq = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
+    ml_err_train_rmse_hq=np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
+    ml_err_test_rmse_hq=np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
 #print('Training error: '+str(ml_err_train))
 #print('Test error: '+str(ml_err_test))
-
-
 coeffs = pd.DataFrame(data={'label':trainset_s.columns, 'w':w, 'w_abs':np.abs(w)})
 
 #print(coeffs.sort_values(by='w_abs',ascending=False).head(20))
 
-
 ######
 ## Plotting
 ######
-
-plt.close('all')
 
 # Figure 2 - one plot
 
@@ -691,16 +699,21 @@ plt.legend((ml_plot_train_points,ml_plot_test_points),('Training Set','Test Set'
 plt.gcf().subplots_adjust(left=0.2,top=0.95,bottom=0.15,right=0.95)
 # plt.savefig(mainfolder+'/ML_potassiated_alpha100_onlymordred.png',format='png',dpi=300)
 
-ml_plot_hq=plt.gcf()
-plt.savefig('ML_HQ_plot.png',dpi=300)
-st.write(ml_plot_hq)
-
+if working_ML_dataset.equals(quinone_ML_data):
+    ml_plot_bq=plt.gcf()
+    plt.savefig('ML_BQ_plot.png',dpi=300)
+    st.write(ml_plot_bq)
+    st.markdown('''ML model for quinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C.'''.format(ml_err_train_bq,ml_err_test_bq,ml_err_train_rmse_bq,ml_err_test_rmse_bq) )
+elif working_ML_dataset.equals(hydroquinone_ML_data):
+    ml_plot_hq=plt.gcf()
+    plt.savefig('ML_HQ_plot.png',dpi=300)
+    st.write(ml_plot_hq)
+    st.markdown('''ML model for hydroquinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C.'''.format(ml_err_train_hq,ml_err_test_hq,ml_err_train_rmse_hq,ml_err_test_rmse_hq) )
 
 #print('Time to Run = ' + str(time.time()-starttime) + ' s')
 
 #endregion
 ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
-
 
 r'''
 ### Thermodynamics-Based Model
