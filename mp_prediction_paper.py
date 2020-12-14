@@ -895,11 +895,9 @@ else:
 r'''
 We note that there appears to be a systematic underestimation of the melting points of the higher $T_m$ and an overestimate of the melting points of the lower $T_m$ molecules. We attribute this systematic error to our model for enthalpy. By using all of the molecules in the dataset to generate one set of fitted parameters, we are effectively assuming that all molecules have the same types of intermolecular interactions. However, this is unlikely true, as the higher melting molecules most likely have stronger intermolecular interactions (perhaps hydrogen bonding), and thus should have higher enthalpies of melting. By combining different types of quinones molecules in this way, we are essentially taking an intermediate strength of intermolecular interaction and applying it to all the molecules in the dataset, which results in the over- and under- estimation that we see in our data. This was verified by analyzing the types of molecules on both ends of the spectrum to see if there were obvious reasons why the higher melting compounds might have stronger interactions and the lower melting compounds would have weaker interactions.
 
-
-
-Upon observing the similarities between the parameters for the quinone and hydroquinone models, we combined both into a single dataset and fit a new model - the combined Quinone+Hydroquinone dataset. 
+Upon observing the difficulties in maintaining a consistent sign for the eccentricity parameters, which we suspected was due to the relative unimportance of it and the small dataset, we decided to combine both the quinone and hydroquinone datasets into a single dataset and fit a model to this larger dataset (~200 molecules). 
 '''
-
+# Combined Quinone + Hydroquinone Plot
 MAKING_NEW_PLOTS=True
 if MAKING_NEW_PLOTS:
     ## EDIT BELOW HERE
@@ -993,7 +991,9 @@ All of the data for this method was downloaded from the Reaxys database online (
 Once all the compounds were downloaded we had to further process the data for molecules that had multiple reported melting points. The Tietjen-Moore outlier test was employed to determine whether there were any outliers in the set of melting point data for each molecule, and remove outliers if they did exist. This test requires an initial hypothesis for how many outliers exist in the dataset, so we incrementally increased the hypothesized number of outliers until the range was less than 15 C, or we had thrown out more than half of the melting points in the set. If we had to eliminate more than half the melting points (outlier test failed), we removed that molecule from our dataset.
 
 ### Thermodynamics-Based Model
+To build our quinone and hydroquinone datasets, we used crystal structure data acquired from the Cambridge Crystallographic Data Centre (CCDC) to calculate the molecular volume for each compound. Molecular symmetry, torsional angles, and eccentrity values were calculated by visual inspection of the 2D molecular structure. The experimental melting points recorded in the CCDC database were used in our dataset, if they were reported. If the melting points were not reported in the CCDC, we found the reported melting points for the molecules in literature (sources listed in the database in SI). A total of 94 quinones, 94 hydroquinones, and 224 hydrocarbons were used in the analysis. 
 
+We wrote a script that allowed us to specify any functional form of the model that we wanted to test on our datasets. This allowed us to test several different forms of the model to determine what enthalpy relation had the most predictive power. The function ``optimize.curve\textunderscore fit" in the python library ``scipy" was used to calculate values for the parameters in our model, given reasonable starting guesses. All datasets were randomly split into a training and test set, and the model parameters were fitted using only the training set. The resulting equation was then used to calculate the predicted melting points for both the training and test sets. Both the training and test set errors were calculated independently - both the average absolute error and the root mean square errors were calculated.
 
 '''
 
