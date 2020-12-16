@@ -17,6 +17,8 @@ from sklearn import preprocessing
 from sklearn.linear_model import Ridge
 from matplotlib import gridspec
 from PIL import Image
+import scipy.stats as st
+
 
 ###################### Thermodynamics-Based Model Code #########################
 
@@ -74,6 +76,25 @@ def make_plots(dataset_test,dataset_train,letters_in_use, dataset_name,avg_model
 
 def rmse(predictions, targets):
     return np.sqrt(((predictions - targets) ** 2).mean())
+
+def confidence_intervals(*array_of_predictor_values):
+    itterable_list=list(range(num_predictors))
+    list_of_means=[]
+    list_of_confidence_intervals=[]
+
+    for item in itterable_list:
+        this_predictor_values=[]
+        
+        for value in array_of_predictor_values:
+            this_predictor_value.append(value[item])
+        
+        list_of_confidence_intervals.append(st.t.interval(alpha=0.95, df=len(this_predictor_value)-1, loc=np.mean(this_predictor_value), scale=st.sem(this_predictor_value)))
+        
+
+
+
+
+
 
 # Import data files for physics-based model into pandas dataframes
 quinone_data = pd.read_csv("Entropy and Volume Data - Quinones.csv")
