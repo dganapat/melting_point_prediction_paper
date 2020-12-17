@@ -12,7 +12,7 @@ Virtual Environment Information:
         You can replace mppredictionpapervenv with whatever you want your virtual environment to be called
     To activate virtual environnment, in the terminal, type: conda activate mppredictionpapervenv
         You should see (mppredictionpapervenv) in front of your command line input now
-    When in vscode, make sure you selec the right interpreter by clicking on Python X.X.X in the bottom left corner, then selecting the (mppredictionpapervenv) interpreter from the top menu. You might need to restart VSCode to get it to show up.
+    When in vscode, make sure you select the right interpreter by clicking on Python X.X.X in the bottom left corner, then selecting the (mppredictionpapervenv) interpreter from the top menu. You can also navigate to this by pressing command+shift+p and typing interpreter -> select interpreter -> choose the one in the virtual environment. You might need to restart VSCode to get it to show up.
 
 Python 3.7.9 64-bit
 Packages to install (with commands):

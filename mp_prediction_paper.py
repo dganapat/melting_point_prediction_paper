@@ -557,7 +557,7 @@ elif working_ML_dataset.equals(hydroquinone_ML_data):
 ######### HYDROQUINONE ML PLOT ############## 
 
 working_ML_dataset=hydroquinone_ML_data
-# The training set and test set will only re-shuffle if do_featurization is set to true. Otherwise it will use the training and test set as split in the previous run where do_featurization was set to true to avoid the time required to featurize. 
+ 
 do_featurization = False
 ## EDIT ABOVE HERE - Change working dataset for Machine Learning Model ##
 
@@ -1018,9 +1018,6 @@ st.write(bqhq_parameters_df)
     # ```
     # '''
 
-# Questions for Antonio:
-    # How did you split the datasets into training and test sets? I didn't see where this happens in the code
-    # Do you use any of the functions in the helper_functions.py file? I couldn't find them in either parse_reaxys_data or featurization_regression.py
 
 # To do:
-    # Re-split training and test set for ML approach and re-write so that it re-shuffles on every run of the code
+    # Figure out if g should be + or -
