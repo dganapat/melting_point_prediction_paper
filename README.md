@@ -22,7 +22,7 @@ Packages to install (with commands):
 
 All other required packages are installed as dependencies of the above packages. These packages are all that's needed for both Wunmi's automated physics-based model generation script and Antonio's machine learning model using Reaxys data.
 
-Once you've installed all the packages you need in your virtual environment, in the terminal in vscode streamlit run mp_prediction_paper.py. A link should be outputted which you can open in a browser window
+Once you've installed all the packages you need in your virtual environment, in the terminal in vscode streamlit run mp_prediction_paper.py. A link should be outputted which you can open in a browser window. The easiest way to edit and  view your code is by split-screening your coding editor (ex. vscode) and the streamlit browser. If you make changes in your script you can refresh the streamlit window (ex. cmd+r) or clicking rerun in the top right corner. Pressing run in your coding editor won't do anything in streamlit.
 
 Notes:
 Some blocks of code are hidden inside "regions". To open them up, just click on the little arrow next to where you see the code #region...
