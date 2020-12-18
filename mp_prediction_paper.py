@@ -17,7 +17,7 @@ from sklearn import preprocessing
 from sklearn.linear_model import Ridge
 from matplotlib import gridspec
 from PIL import Image
-import scipy.stats as st
+import scipy.stats as stt
 
 
 ###################### Thermodynamics-Based Model Code #########################
@@ -78,17 +78,24 @@ def rmse(predictions, targets):
     return np.sqrt(((predictions - targets) ** 2).mean())
 
 def confidence_intervals(*array_of_predictor_values):
-    itterable_list=list(range(num_predictors))
     list_of_means=[]
     list_of_confidence_intervals=[]
+    [num_column,num_row]=np.shape(array_of_predictor_values)
+    print (num_column)
+    print (num_row)
 
-    for item in itterable_list:
+    for item in range(num_column):
         this_predictor_values=[]
-        
-        for value in array_of_predictor_values:
-            this_predictor_value.append(value[item])
-        
-        list_of_confidence_intervals.append(st.t.interval(alpha=0.95, df=len(this_predictor_value)-1, loc=np.mean(this_predictor_value), scale=st.sem(this_predictor_value)))
+        predictor_value_total=0
+        print(item)
+        print(array_of_predictor_values)
+        this_vector=array_of_predictor_values[item]
+        mean= np.mean(this_vector)
+        confidence_interval=stt.t.interval(alpha=0.95, df=len(this_predictor_values)-1, loc=np.mean(this_predictor_values), scale=stt.sem(this_predictor_values))
+        list_of_means.append(mean)
+        list_of_confidence_intervals.append(confidence_interval)
+    return list_of_means
+    return list_of_confidence_intervals
         
 
 
