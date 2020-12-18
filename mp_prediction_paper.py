@@ -50,9 +50,7 @@ def fit_tm_model_err(predictors,*parameter):
 
 def make_plots(dataset_test,dataset_train,letters_in_use, dataset_name,avg_model_err,rmse_err):
     Tbuffer= 25
-    lowerT =min ( min(dataset_test['T_m (K)']),min(dataset_train['T_m (K)'])
-    ,min(fit_tm_model_err(dataset_test,letters_in_use)),
-    min (fit_tm_model_err(dataset_train,letters_in_use)))
+    lowerT =min ( min(dataset_test['T_m (K)']),min(dataset_train['T_m (K)']),min(fit_tm_model_err(dataset_test,letters_in_use)),min (fit_tm_model_err(dataset_train,letters_in_use)))
     lowerT=lowerT- Tbuffer
 
     higherT =max( max(dataset_test['T_m (K)']),max(dataset_train['T_m (K)'])
@@ -77,30 +75,12 @@ def make_plots(dataset_test,dataset_train,letters_in_use, dataset_name,avg_model
 def rmse(predictions, targets):
     return np.sqrt(((predictions - targets) ** 2).mean())
 
-# def confidence_intervals(array_of_predictor_values):
-#     list_of_means=[]
-#     list_of_confidence_intervals=[]
-#     if np.shape(np.shape(array_of_predictor_values))[0]==1:
-#         this_vector=array_of_predictor_values
-#         mean= np.mean(this_vector)
-#         confidence_interval=stt.t.interval(0.95,len(this_vector)-1, mean, stt.sem(this_vector))
-#         list_of_means.append(mean)
-#         list_of_confidence_intervals.append(confidence_interval)
-#     else:
-#         [num_column,num_row]=np.shape(array_of_predictor_values)
-#         for item in range(num_column):
-#             this_vector=array_of_predictor_values.iloc[:,[item]]
-#             mean= np.mean(this_vector)
-#             confidence_interval=stt.t.interval(0.95,len(this_vector)-1, mean, stt.sem(this_vector))
-#             list_of_means.append(mean)
-#             list_of_confidence_intervals.append(confidence_interval)
-#     return [list_of_means, list_of_confidence intervals]
-
-# Function for rounding tuples in confidence intervals
+# Function for rounding tuples in confidence intervals - copied from online
 def re_round(li, _prec=3):
-     try:
+    ''' Rounds argument li to desired number of decimals (_prec) '''
+    try:
          return round(li, _prec)
-     except TypeError:
+    except TypeError:
          return type(li)(re_round(x, _prec) for x in li)
         
 
@@ -116,39 +96,41 @@ hydrocarbon_data= pd.read_csv("Entropy and Volume Data - Hydrocarbons.csv")
 mega_database=pd.concat([hydroquinone_data,quinone_data])[['sigma','tau','V_m (nm3)','T_m (K)','Eccentricity(Ear)','Eccentricity(Eal)']].reset_index(drop=True)
 
 # Add to this array if new models need additional parameters
-all_possible_predictors= ['tau', 'V_m (nm3)', 'sigma','Eccentricity(Eal)', 'Eccentricity(Ear)']
-
-letters_in_use= ['a','b','c','d','f','g','h','k','l','m']
-predicted= ['T_m (K)']
 
 #endregion
 ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
 
-MAKING_NEW_PLOTS=False
 
-if MAKING_NEW_PLOTS:
-    ## EDIT BELOW HERE
-    ### Change datasets used, model form, starting guesses
-    #region
-    # Change the datasets that you're interested in looking at in this block. Make sure you change the names of the datasets appropriately. Note: All datasets you include here will be tested with the same model form. If you want to test different model forms for different datasets, you will have to test one dataset at a time and change the model form as desired for that single dataset.
-    datasets= [hydrocarbon_data]
-    dataset_names= ['Hydrocarbon']
-    num_datasets= len(datasets)
+## EDIT BELOW HERE
+### Change datasets used, model form, starting guesses
+#region
+# Change the datasets that you're interested in looking at in this block. Make sure you change the names of the datasets appropriately. Note: All datasets you include here will be tested with the same model form. If you want to test different model forms for different datasets, you will have to test one dataset at a time and change the model form as desired for that single dataset.
+datasets = [hydrocarbon_data]
+dataset_names = ['Hydrocarbon']
 
-    # CHANGE MODEL NAME AND FORM HERE:
-    model_form_name= '$V_m^{-2}$ Numerator, Full Denominator'
-    model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-2)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
+# CHANGE MODEL NAME AND FORM HERE:
+model_form_name = '$V_m^{-2}$ Numerator, Full Denominator'
+model_form = '(parameters[0]*predictors["V_m (nm3)"]**(-2) + parameters[1]) / (parameters[2]*np.log(predictors["sigma"]) + parameters[3]*predictors["tau"] + 1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
 
-    # CHANGE STARTING GUESSES HERE
-    # Note: You must have the correct number of starting guesses to match the number of parameters in the model form, and you must also have the correct number of sets of starting guesses depending how many datasets you're testing at once.
-    starting_guesses= [[-4.32603500e+00,2.87801207e+02,-7.93904846e-02,1.22626036e-02,-9.56732927e-02,-4.24685604e-02]]
-    # HQ starting guesses: ,[-2.46237655e+01,6.04795762e+02,-6.14060740e-02,4.49395401e-02,3.03647346e-02,3.38981530e-02],[-1.83846686e+01,2.34877509e+02,-1.21714771e-01,-1.30258253e-02,-1.14720566e-01,-1.09430299e-01]
+# CHANGE STARTING GUESSES HERE
+# Note: You must have the correct number of starting guesses to match the number of parameters in the model form, and you must also have the correct number of sets of starting guesses depending how many datasets you're testing at once.
+starting_guesses= [[-4.32603500e+00,2.87801207e+02,-7.93904846e-02,1.22626036e-02,-9.56732927e-02,-4.24685604e-02]]
+# HQ starting guesses: ,[-2.46237655e+01,6.04795762e+02,-6.14060740e-02,4.49395401e-02,3.03647346e-02,3.38981530e-02],[-1.83846686e+01,2.34877509e+02,-1.21714771e-01,-1.30258253e-02,-1.14720566e-01,-1.09430299e-01]
 
     #endregion
     ## EDIT ABOVE HERE
-
+all_possible_predictors= ['tau', 'V_m (nm3)', 'sigma','Eccentricity(Eal)', 'Eccentricity(Ear)']
+letters_in_use= ['a','b','c','d','f','g','h','k','l','m']
+predicted= ['T_m (K)']
     ## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
     #region
+def vbt_model_automated(datasets, dataset_names, model_form, model_form_name, starting_guesses, num_runs):
+    fig_dict={}
+
+    all_possible_predictors= ['tau', 'V_m (nm3)', 'sigma','Eccentricity(Eal)', 'Eccentricity(Ear)']
+    letters_in_use= ['a','b','c','d','f','g','h','k','l','m']
+    predicted= ['T_m (K)']
+    num_datasets= len(datasets)
     num_predictors= list(range(len(findstr(model_form, 'predictors'))))
     used_predictors= []
 
@@ -167,10 +149,10 @@ if MAKING_NEW_PLOTS:
 
     plots=list(range(num_datasets))
     fig = plt.figure()      
-    for i in range(num_datasets):
+    for i in range(num_datasets):   
         avg_model_err=[0,0]
         rmse_err=[0,0]
-        number_of_runs=5
+        number_of_runs=num_runs
         count=0
         while count < number_of_runs:
             dataset= datasets[i]
@@ -194,9 +176,17 @@ if MAKING_NEW_PLOTS:
                 rmse_err[1]=rmse_err[1]+rmse((fit_tm_model_err(dataset_train,letters_in_use)),dataset_train['T_m (K)'])/(number_of_runs)
 
         #print(rmse_err)
-        ax= (make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err))
-        
-        plots[i]= ax
+            fig_dict[dataset_names[i]] = {
+                'fig':  make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err),
+                'Average Absolute Error': avg_model_err,
+                'RMSE Error': rmse_err
+            }
+
+           
+    return fig_dict
+
+    # fig_dict['dataset_name']['fig']
+
 
     
 #endregion
@@ -1030,6 +1020,12 @@ To build our quinone and hydroquinone datasets, we used crystal structure data a
 We wrote a script that allowed us to specify any functional form of the model that we wanted to test on our datasets. This allowed us to test several different forms of the model to determine what enthalpy relation had the most predictive power. The function ``optimize.curve\textunderscore fit" in the python library ``scipy" was used to calculate values for the parameters in our model, given reasonable starting guesses. All datasets were randomly split into a training and test set, and the model parameters were fitted using only the training set. The resulting equation was then used to calculate the predicted melting points for both the training and test sets. Both the training and test set errors were calculated independently - both the average absolute error and the root mean square errors were calculated.
 
 '''
+# Edit here
+# number of decimal points to round to in our parameter  tables
+dec_points=3
+# confidence interval we want to calculate in our tables
+ci_int_val=0.95
+##### STATIC BLOCK BELOW (you know the drill)
 #region
 # This code will only work if we use the same model - can't change the number of parameters otherwise the columns will be mis-labeled
 hc_parameters_df=pd.DataFrame(data=hc_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
@@ -1037,23 +1033,27 @@ bq_parameters_df=pd.DataFrame(data=bq_parameters,index=["Run 1","Run 2","Run 3",
 hq_parameters_df=pd.DataFrame(data=hq_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
 bqhq_parameters_df=pd.DataFrame(data=bqhq_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
 
+# datasets = [hc_parameters, bq_parameters, hq_parameters, bqhq_parameters]
+# for dataset in datasets:
+
 # Calculate parameter means and confidence intervals for each dataset. We can do this in very few lines using a dictionary and f strings
-df_lists={'hc':hc_parameters_df,'bq':bq_parameters_df,'hq':hq_parameters_df,'bqhq':bqhq_parameters_df}
+df_dict={'hc':hc_parameters_df,'bq':bq_parameters_df,'hq':hq_parameters_df,'bqhq':bqhq_parameters_df}
 
-dec_points=3
-for key in df_lists:
+for key in df_dict:
     # iterate through all the dfs in our dictionary, initialize mean and ci lists
-    exec(f'{key}_mean_list=[]')
-    exec(f'{key}_ci_list=[]')
-    for column in df_lists[key]:
+    mean_list=[]
+    ci_list=[]
+    for column in df_dict[key]:
         # calculate the mean and 95% CI for each column in the current df
-        exec(f'{key}_mean_list.append(np.mean(df_lists[key][column]))')
-        exec(f'{key}_ci_list.append(stt.t.interval(0.95,len({key}_parameters_df[column])-1, np.mean({key}_parameters_df[column]), stt.sem({key}_parameters_df[column])))')
+        mean_list.append(np.mean(df_dict[key][column]))
+        ci_list.append(stt.t.interval(ci_int_val,len(df_dict[key][column])-1, np.mean(df_dict[key][column]), stt.sem(df_dict[key][column])))
 # Add these statistics to a new dataframe called xx_parameters_df_w_stats
-    exec(f'{key}_parameters_df_w_stats=df_lists[key].copy().round(dec_points)')
-    exec(f'{key}_parameters_df_w_stats.loc["Mean"]=re_round({key}_mean_list,dec_points)')
-    exec(f'{key}_parameters_df_w_stats.loc["95% CI"]=re_round({key}_ci_list)')
+    exec(f'{key}_parameters_df_w_stats=df_dict[key].copy().round(dec_points)')
+    exec(f'{key}_parameters_df_w_stats.loc["Mean"]=re_round(mean_list,dec_points)')
+    exec(f'{key}_parameters_df_w_stats.loc["95% CI"]=re_round(ci_list,dec_points)')
 
+
+#### STATIC BLOCK ABOVE
 
 #endregion
 st.markdown('''### Hydrocarbon Parameters ''')
