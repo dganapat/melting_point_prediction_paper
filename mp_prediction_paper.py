@@ -77,25 +77,31 @@ def make_plots(dataset_test,dataset_train,letters_in_use, dataset_name,avg_model
 def rmse(predictions, targets):
     return np.sqrt(((predictions - targets) ** 2).mean())
 
-def confidence_intervals(*array_of_predictor_values):
-    list_of_means=[]
-    list_of_confidence_intervals=[]
-    [num_column,num_row]=np.shape(array_of_predictor_values)
-    print (num_column)
-    print (num_row)
+# def confidence_intervals(array_of_predictor_values):
+#     list_of_means=[]
+#     list_of_confidence_intervals=[]
+#     if np.shape(np.shape(array_of_predictor_values))[0]==1:
+#         this_vector=array_of_predictor_values
+#         mean= np.mean(this_vector)
+#         confidence_interval=stt.t.interval(0.95,len(this_vector)-1, mean, stt.sem(this_vector))
+#         list_of_means.append(mean)
+#         list_of_confidence_intervals.append(confidence_interval)
+#     else:
+#         [num_column,num_row]=np.shape(array_of_predictor_values)
+#         for item in range(num_column):
+#             this_vector=array_of_predictor_values.iloc[:,[item]]
+#             mean= np.mean(this_vector)
+#             confidence_interval=stt.t.interval(0.95,len(this_vector)-1, mean, stt.sem(this_vector))
+#             list_of_means.append(mean)
+#             list_of_confidence_intervals.append(confidence_interval)
+#     return [list_of_means, list_of_confidence intervals]
 
-    for item in range(num_column):
-        this_predictor_values=[]
-        predictor_value_total=0
-        print(item)
-        print(array_of_predictor_values)
-        this_vector=array_of_predictor_values[item]
-        mean= np.mean(this_vector)
-        confidence_interval=stt.t.interval(alpha=0.95, df=len(this_predictor_values)-1, loc=np.mean(this_predictor_values), scale=stt.sem(this_predictor_values))
-        list_of_means.append(mean)
-        list_of_confidence_intervals.append(confidence_interval)
-    return list_of_means
-    return list_of_confidence_intervals
+# Function for rounding tuples in confidence intervals
+def re_round(li, _prec=3):
+     try:
+         return round(li, _prec)
+     except TypeError:
+         return type(li)(re_round(x, _prec) for x in li)
         
 
 
@@ -1024,19 +1030,40 @@ To build our quinone and hydroquinone datasets, we used crystal structure data a
 We wrote a script that allowed us to specify any functional form of the model that we wanted to test on our datasets. This allowed us to test several different forms of the model to determine what enthalpy relation had the most predictive power. The function ``optimize.curve\textunderscore fit" in the python library ``scipy" was used to calculate values for the parameters in our model, given reasonable starting guesses. All datasets were randomly split into a training and test set, and the model parameters were fitted using only the training set. The resulting equation was then used to calculate the predicted melting points for both the training and test sets. Both the training and test set errors were calculated independently - both the average absolute error and the root mean square errors were calculated.
 
 '''
-
+#region
+# This code will only work if we use the same model - can't change the number of parameters otherwise the columns will be mis-labeled
 hc_parameters_df=pd.DataFrame(data=hc_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
 bq_parameters_df=pd.DataFrame(data=bq_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
 hq_parameters_df=pd.DataFrame(data=hq_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
 bqhq_parameters_df=pd.DataFrame(data=bqhq_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
+
+# Calculate parameter means and confidence intervals for each dataset. We can do this in very few lines using a dictionary and f strings
+df_lists={'hc':hc_parameters_df,'bq':bq_parameters_df,'hq':hq_parameters_df,'bqhq':bqhq_parameters_df}
+
+dec_points=3
+for key in df_lists:
+    # iterate through all the dfs in our dictionary, initialize mean and ci lists
+    exec(f'{key}_mean_list=[]')
+    exec(f'{key}_ci_list=[]')
+    for column in df_lists[key]:
+        # calculate the mean and 95% CI for each column in the current df
+        exec(f'{key}_mean_list.append(np.mean(df_lists[key][column]))')
+        exec(f'{key}_ci_list.append(stt.t.interval(0.95,len({key}_parameters_df[column])-1, np.mean({key}_parameters_df[column]), stt.sem({key}_parameters_df[column])))')
+# Add these statistics to a new dataframe called xx_parameters_df_w_stats
+    exec(f'{key}_parameters_df_w_stats=df_lists[key].copy().round(dec_points)')
+    exec(f'{key}_parameters_df_w_stats.loc["Mean"]=re_round({key}_mean_list,dec_points)')
+    exec(f'{key}_parameters_df_w_stats.loc["95% CI"]=re_round({key}_ci_list)')
+
+
+#endregion
 st.markdown('''### Hydrocarbon Parameters ''')
-st.write(hc_parameters_df)
+st.write(hc_parameters_df_w_stats)
 st.markdown('''### Quinone Parameters ''')
-st.write(bq_parameters_df)
+st.write(bq_parameters_df_w_stats)
 st.markdown('''### Hydroquinone Parameters ''')
-st.write(hq_parameters_df)
+st.write(hq_parameters_df_w_stats)
 st.markdown('''### Quinone + Hydroquinone Parameters ''')
-st.write(bqhq_parameters_df)
+st.write(bqhq_parameters_df_w_stats)
 
 # How to put code in markdown using python formatting
     # '''
