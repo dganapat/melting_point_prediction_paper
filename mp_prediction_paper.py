@@ -420,15 +420,17 @@ r'''
 ### Machine Learning Model
 '''
 
+alpha=st.slider('alpha')
+
 # Quinone ML Plot
-ml_bq_dict=ml_model(ml_dataset_dict,'Quinones',100,False)
+ml_bq_dict=ml_model(ml_dataset_dict,'Quinones',alpha,False)
 
 ml_bq_dict['Plot'].savefig('ML_BQ_plot.png',dpi=300)
 st.write(ml_bq_dict['Plot'])
 st.markdown('''ML model for quinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C.'''.format(ml_bq_dict['Average Absolute Error'][1],ml_bq_dict['Average Absolute Error'][0],ml_bq_dict['RMSE Error'][1],ml_bq_dict['RMSE Error'][0]) )
 
 # Hydroquinone ML Plot
-ml_hq_dict=ml_model(ml_dataset_dict,'Hydroquinones',100,False)
+ml_hq_dict=ml_model(ml_dataset_dict,'Hydroquinones',alpha,False)
 ml_hq_dict['Plot'].savefig('ML_HQ_plot.png',dpi=300)
 st.write(ml_hq_dict['Plot'])
 st.markdown('''ML model for hydroquinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C.'''.format(ml_hq_dict['Average Absolute Error'][1],ml_hq_dict['Average Absolute Error'][0],ml_hq_dict['RMSE Error'][1],ml_hq_dict['RMSE Error'][0]) )
