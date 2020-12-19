@@ -72,6 +72,7 @@ def make_plots(dataset_test,dataset_train,letters_in_use, dataset_name,avg_model
     ax.set_ylim([lowerT,higherT])
     return fig
 
+# function to calculate root mean square error
 def rmse(predictions, targets):
     return np.sqrt(((predictions - targets) ** 2).mean())
 
@@ -83,57 +84,13 @@ def re_round(li, _prec=3):
     except TypeError:
          return type(li)(re_round(x, _prec) for x in li)
         
-
-
-
-
-
-
-# Import data files for physics-based model into pandas dataframes
-quinone_data = pd.read_csv("Entropy and Volume Data - Quinones.csv")
-hydroquinone_data= pd.read_csv("Entropy and Volume Data - Hydroquinones.csv")
-hydrocarbon_data= pd.read_csv("Entropy and Volume Data - Hydrocarbons.csv")
-mega_database=pd.concat([hydroquinone_data,quinone_data])[['sigma','tau','V_m (nm3)','T_m (K)','Eccentricity(Ear)','Eccentricity(Eal)']].reset_index(drop=True)
-
-# Add to this array if new models need additional parameters
-
-#endregion
-## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
-
-
-## EDIT BELOW HERE
-### Change datasets used, model form, starting guesses
-#region
-# Change the datasets that you're interested in looking at in this block. Make sure you change the names of the datasets appropriately. Note: All datasets you include here will be tested with the same model form. If you want to test different model forms for different datasets, you will have to test one dataset at a time and change the model form as desired for that single dataset.
-datasets = [hydrocarbon_data]
-dataset_names = ['Hydrocarbon']
-
-# CHANGE MODEL NAME AND FORM HERE:
-model_form_name = '$V_m^{-2}$ Numerator, Full Denominator'
-model_form = '(parameters[0]*predictors["V_m (nm3)"]**(-2) + parameters[1]) / (parameters[2]*np.log(predictors["sigma"]) + parameters[3]*predictors["tau"] + 1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
-
-# CHANGE STARTING GUESSES HERE
-# Note: You must have the correct number of starting guesses to match the number of parameters in the model form, and you must also have the correct number of sets of starting guesses depending how many datasets you're testing at once.
-starting_guesses= [[-4.32603500e+00,2.87801207e+02,-7.93904846e-02,1.22626036e-02,-9.56732927e-02,-4.24685604e-02]]
-# HQ starting guesses: ,[-2.46237655e+01,6.04795762e+02,-6.14060740e-02,4.49395401e-02,3.03647346e-02,3.38981530e-02],[-1.83846686e+01,2.34877509e+02,-1.21714771e-01,-1.30258253e-02,-1.14720566e-01,-1.09430299e-01]
-
-    #endregion
-    ## EDIT ABOVE HERE
-all_possible_predictors= ['tau', 'V_m (nm3)', 'sigma','Eccentricity(Eal)', 'Eccentricity(Ear)']
-letters_in_use= ['a','b','c','d','f','g','h','k','l','m']
-predicted= ['T_m (K)']
-    ## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
-    #region
-def vbt_model_automated(datasets, dataset_names, model_form, model_form_name, starting_guesses, num_runs):
-    fig_dict={}
-
+def vbt_model_automated(dataset_dictionary, dataset_name, model_form, model_form_name, starting_guesses, number_of_runs):
+    '''Generates a dictionary of VBT model plot, Avg Absolute Error, RMSE Error, and Parameter values'''
     all_possible_predictors= ['tau', 'V_m (nm3)', 'sigma','Eccentricity(Eal)', 'Eccentricity(Ear)']
     letters_in_use= ['a','b','c','d','f','g','h','k','l','m']
     predicted= ['T_m (K)']
-    num_datasets= len(datasets)
-    num_predictors= list(range(len(findstr(model_form, 'predictors'))))
     used_predictors= []
-
+    # This for loop finds which parameters are used in the model form and adds them to a list of used predictors
     for i in range(len(all_possible_predictors)):
         this_predictor= all_possible_predictors[i]
         if findstr(model_form, this_predictor):
@@ -141,59 +98,180 @@ def vbt_model_automated(datasets, dataset_names, model_form, model_form_name, st
     used_predictors= used_predictors+predicted
     num_parameters= len(findstr(model_form, 'parameter'))
 
-    if num_parameters!=len(starting_guesses[0]):
+    if num_parameters!=len(starting_guesses):
         raise Exception("Number of starting guesses doesn't match the number of parameters")
 
     letters_in_use=letters_in_use[0:num_parameters]
     num_parameters= list(range(num_parameters))
+    avg_model_err=[0,0]
+    rmse_err=[0,0]
+    count=0
+    parameters_from_runs=np.zeros((number_of_runs,len(num_parameters)))
+    while count < number_of_runs:
+        dataset= dataset_dictionary[dataset_name]
+        dataset_length= len(dataset)
+        predictors=dataset[used_predictors].astype('float64')
+        [dataset_train,dataset_test]=split_data(predictors)
+        (letters_in_use,_)=opt.curve_fit(fit_tm_model,dataset_train,dataset_train['T_m (K)'],(starting_guesses))
+        
+        if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
+        -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs) and letters_in_use[0]<0:
+            #print(letters_in_use)
+            parameters_from_runs[count,:]=letters_in_use
+            avg_model_err[0]=avg_model_err[0]+(statistics.mean(np.absolute(fit_tm_model_err
+            (dataset_test,letters_in_use)-dataset_test['T_m (K)']))/(number_of_runs))
+            avg_model_err[1]=avg_model_err[1]+(statistics.mean(np.absolute(fit_tm_model_err
+            (dataset_train,letters_in_use)-dataset_train['T_m (K)']))/(number_of_runs))
+            count=count+1
+            rmse_err[0]=rmse_err[0]+rmse((fit_tm_model_err(dataset_test,letters_in_use)),dataset_test['T_m (K)'])/(number_of_runs)
+            rmse_err[1]=rmse_err[1]+rmse((fit_tm_model_err(dataset_train,letters_in_use)),dataset_train['T_m (K)'])/(number_of_runs)
+    fig=make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err)
+    #print(rmse_err)
+    model_dict = {
+        'Plot': fig,
+        'Average Absolute Error': avg_model_err,
+        'RMSE Error': rmse_err,
+        'Parameter Values': parameters_from_runs
+    }
+    plt.close()
+    return model_dict
 
-    plots=list(range(num_datasets))
-    fig = plt.figure()      
-    for i in range(num_datasets):   
-        avg_model_err=[0,0]
-        rmse_err=[0,0]
-        number_of_runs=num_runs
-        count=0
-        while count < number_of_runs:
-            dataset= datasets[i]
-            pd.set_option("display.max_rows", None, "display.max_columns", None)
-            dataset_name=dataset_names[i]
-            dataset_length= len(dataset)
-            predictors= dataset[used_predictors].loc[2:dataset_length]
-            predictors= predictors.astype('float64')
-            [dataset_train,dataset_test]=split_data(predictors)
-            (letters_in_use,_)=opt.curve_fit(fit_tm_model,dataset_train,dataset_train['T_m (K)'],(starting_guesses[i]))
-            
-            if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
-            -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs) and letters_in_use[0]<0:
-                #print(letters_in_use)
-                avg_model_err[0]=avg_model_err[0]+(statistics.mean(np.absolute(fit_tm_model_err
-                (dataset_test,letters_in_use)-dataset_test['T_m (K)']))/(number_of_runs))
-                avg_model_err[1]=avg_model_err[1]+(statistics.mean(np.absolute(fit_tm_model_err
-                (dataset_train,letters_in_use)-dataset_train['T_m (K)']))/(number_of_runs))
-                count=count+1
-                rmse_err[0]=rmse_err[0]+rmse((fit_tm_model_err(dataset_test,letters_in_use)),dataset_test['T_m (K)'])/(number_of_runs)
-                rmse_err[1]=rmse_err[1]+rmse((fit_tm_model_err(dataset_train,letters_in_use)),dataset_train['T_m (K)'])/(number_of_runs)
+def ml_model(ml_dataset_dict, dataset_key, alpha=100, do_featurization = False):  
+    if do_featurization:
 
-        #print(rmse_err)
-            fig_dict[dataset_names[i]] = {
-                'fig':  make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err),
-                'Average Absolute Error': avg_model_err,
-                'RMSE Error': rmse_err
-            }
-
-           
-    return fig_dict
-
-    # fig_dict['dataset_name']['fig']
-
-
+        working_ML_dataset=ml_dataset_dict[dataset_key]
+        mols_full=[Chem.MolFromSmiles(m) for m in working_ML_dataset.SMILES.tolist() if Chem.MolFromSmiles(m) != None]
+        calc = Calculator(descriptors, ignore_3D=True)
+        mordredresults = calc.pandas(mols_full)
+        working_ML_dataset = working_ML_dataset.join(mordredresults,how='inner')
+        # save to the appropriate file name depending on which dataset you're looking at
+        if dataset_key=='Quinones':
+            working_ML_dataset.to_csv('featurized_bq.csv',index=False)
+        elif dataset_key=='Hydroquinones':
+            working_ML_dataset.to_csv('featurized_hq.csv',index=False)
+        else:
+            print('Not a valid dataset key')            
+    else:
+        if dataset_key=='Quinones':
+            working_ML_dataset=pd.read_csv('featurized_bq.csv')
+        elif dataset_key=='Hydroquinones':
+            working_ML_dataset=pd.read_csv('featurized_hq.csv')
+   
+   # Now the training set and test set shuffle every time you run the code. If we want to average the errors over multiple runs we can put this in another loop.
+    [trainset,testset] = split_data(working_ML_dataset)
+    trainset=trainset.reset_index()
+    testset=testset.reset_index()        
     
+    ######
+    ## Standardization (want each feature to be a gaussian with zero mean and unit variance)
+    ######
+
+    # drop non-numeric columns and ones for the melting point, so we only have columns of features
+    # I don't know why, but LogP caused a problem during the standardization - dropping for now, but have to figure out
+    # Now dropping everything but MW from the Reaxys, since we don't have it for the Na and K salts
+    columns_to_drop_from_reaxys = ['InChI Key','SMILES','Type of Substance','mp_mean','mp_std','LogP','H Bond Donors','H Bond Acceptors','Rotatable Bonds','TPSA','Lipinski Number','Veber Number']
+
+    if dataset_key=='Quinones':
+        columns_to_drop_thatgavetrouble = ['MAXdO','MINdO']
+        # for bq these gave trouble: ['Unnamed: 0','MAXdO','MINdO']
+    elif dataset_key=='Hydroquinones':
+        columns_to_drop_thatgavetrouble = []
+
+    columns_to_drop = columns_to_drop_from_reaxys + columns_to_drop_thatgavetrouble
+    trainset_s = trainset.drop(columns=columns_to_drop)
+    testset_s = testset.drop(columns=columns_to_drop)
+
+    # drop columns where there is an error from mordred
+    #print('Started with '+str(len(trainset_s.columns))+' features')
+    trainset_s = trainset_s.select_dtypes(include=['float64','int'])
+    #print('After dropping columns with mordred errors, have '+str(len(trainset_s.columns))+' features')
+
+    # drop the same columns from the test set
+    testset_s = testset_s[trainset_s.columns]
+
+    # finally, do the standardization
+    X = preprocessing.scale(trainset_s)
+    # apply the same standardization to the test set
+    scaler = preprocessing.StandardScaler().fit(trainset_s)
+    X_test = scaler.transform(testset_s)
+
+    ######
+    ## Ridge regression
+    ######
+
+    y = trainset.mp_mean.tolist()
+    y_test = testset.mp_mean.tolist()
+
+    rr = Ridge(alpha=alpha)
+    rr.fit(X, y)
+    w = rr.coef_
+    intercept = rr.intercept_
+
+    avg_abs_err = np.zeros(2)
+    rmse_err = np.zeros(2)
+    # The test set is at the 0 index and the training set is at the 1 index to match the convention in the other model 
+    avg_abs_err[1] = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
+    avg_abs_err[0] = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
+    rmse_err[1] = np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
+    rmse_err[0] = np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
+
+    #print('Training error: '+str(ml_err_train))
+    #print('Test error: '+str(ml_err_test))
+    coeffs = pd.DataFrame(data={'label':trainset_s.columns, 'w':w, 'w_abs':np.abs(w)})
+
+    #print(coeffs.sort_values(by='w_abs',ascending=False).head(20))
+
+    # Make plot
+    model_plot=plt.figure(figsize=(4,4), dpi=300)
+    ax1 = plt.gca()
+    ml_plot_train_points=ax1.scatter(y,np.dot(X,w)+intercept,s=5,c='k',alpha=0.7,linewidth=0)
+    ax1.plot([-273,2000],[-273,2000],'k--',lw=1)
+    ml_plot_test_points=ax1.scatter(y_test,np.dot(X_test,w)+intercept,s=5,c='r',alpha=0.7,linewidth=0)
+
+    lims = [min(y+y_test)-5,max(y+y_test)+5]
+
+    for theaxis in [ax1]:
+        
+        theaxis.set_aspect(1)
+        theaxis.set_xlim(lims)
+        theaxis.set_ylim(lims)
+
+        theaxis.set_xlabel(r"mp data ($^{\circ}$C)")
+        theaxis.set_ylabel("mp predicted ($^{\circ}$C)")
+        
+        for item in ([theaxis.xaxis.label, theaxis.yaxis.label, theaxis.yaxis.get_offset_text(), theaxis.xaxis.get_offset_text()]):
+            item.set_fontsize(12)
+        for item in (theaxis.get_xticklabels() + theaxis.get_yticklabels()):
+            item.set_fontsize(10)
+    plt.legend((ml_plot_train_points,ml_plot_test_points),('Training Set','Test Set'))    
+    plt.gcf().subplots_adjust(left=0.2,top=0.95,bottom=0.15,right=0.95)
+   
+    plt.close()
+
+    ml_model_dict={
+        'Plot': model_plot,
+        'Average Absolute Error': avg_abs_err,
+        'RMSE Error': rmse_err,
+        'Model Coefficients': coeffs
+    }
+    return ml_model_dict
+
+
+# Import data files for physics-based model into pandas dataframes
+# VBT Data
+quinone_data = pd.read_csv("Entropy and Volume Data - Quinones.csv")
+hydroquinone_data= pd.read_csv("Entropy and Volume Data - Hydroquinones.csv")
+hydrocarbon_data= pd.read_csv("Entropy and Volume Data - Hydrocarbons.csv")
+mega_database=pd.concat([hydroquinone_data,quinone_data])[['sigma','tau','V_m (nm3)','T_m (K)','Eccentricity(Ear)','Eccentricity(Eal)']].reset_index(drop=True)
+# ML Data
+quinone_ML_data=pd.read_csv('parsed_p_benzoquinone_216.csv')
+hydroquinone_ML_data=pd.read_csv('parsed_p_hydroquinone_204.csv')
+# Make dictionary for VBT data
+dataset_dict={'Quinones':quinone_data,'Hydroquinones':hydroquinone_data,'Hydrocarbons':hydrocarbon_data,'Quinones + Hydroquinones':mega_database}
+# Make dictionary for ML data
+ml_dataset_dict={'Quinones':quinone_ML_data,'Hydroquinones':hydroquinone_ML_data}
 #endregion
-    ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
-
-
-
+## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
 
 r'''
 # Melting Point Prediction for Quinones and Hydroquinones
@@ -299,88 +377,24 @@ where the parameters $a, b, c....$ will be different values from before.
 # Hydrocarbon plot
 MAKING_NEW_PLOTS=True
 if MAKING_NEW_PLOTS:
-    ## EDIT BELOW HERE
-    ### Change datasets used, model form, starting guesses
-    #region
-    # Change the datasets that you're interested in looking at in this block. Make sure you change the names of the datasets appropriately. Note: All datasets you include here will be tested with the same model form. If you want to test different model forms for different datasets, you will have to test one dataset at a time and change the model form as desired for that single dataset.
-    datasets= [hydrocarbon_data]
-    dataset_names= ['Hydrocarbon']
-    num_datasets= len(datasets)
 
-    # CHANGE MODEL NAME AND FORM HERE:
+    # CHANGE MODEL DATASET, NAME AND FORM HERE:
+    dataset_name='Hydrocarbons'
+
     model_form_name= '$V_m^{-2}$ Numerator, Full Denominator'
+
     model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-2)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
 
-    # CHANGE STARTING GUESSES HERE
-    # Note: You must have the correct number of starting guesses to match the number of parameters in the model form, and you must also have the correct number of sets of starting guesses depending how many datasets you're testing at once.
-    starting_guesses= [[-1.5,1.8e+02,-1e-01,-2e-02,-1.1e-01,-9e-02]]
-    # HQ starting guesses: ,[-2.46237655e+01,6.04795762e+02,-6.14060740e-02,4.49395401e-02,3.03647346e-02,3.38981530e-02],[-1.83846686e+01,2.34877509e+02,-1.21714771e-01,-1.30258253e-02,-1.14720566e-01,-1.09430299e-01]
+    starting_guesses= [-1.5,1.8e+02,-1e-01,-2e-02,-1.1e-01,-9e-02]
+    num_runs=5
+    vbt_hc_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,model_form_name,starting_guesses,num_runs)
 
-    #endregion
-    ## EDIT ABOVE HERE
-
-    ## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
-    #region
-    num_predictors= list(range(len(findstr(model_form, 'predictors'))))
-    used_predictors= []
-    for i in range(len(all_possible_predictors)):
-        this_predictor= all_possible_predictors[i]
-        if findstr(model_form, this_predictor):
-            used_predictors.append(this_predictor)
-    used_predictors= used_predictors+predicted
-    num_parameters= len(findstr(model_form, 'parameter'))
-
-    if num_parameters!=len(starting_guesses[0]):
-        raise Exception("Number of starting guesses doesn't match the number of parameters")
-
-    letters_in_use=letters_in_use[0:num_parameters]
-    num_parameters= list(range(num_parameters))
-
-    
-    plots=list(range(num_datasets))
-    fig = plt.figure()      
-    for i in range(num_datasets):
-        avg_model_err=[0,0]
-        rmse_err=[0,0]
-        number_of_runs=5
-        count=0
-        hc_parameters=np.zeros((number_of_runs,len(num_parameters)))
-        while count < number_of_runs:
-            dataset= datasets[i]
-            pd.set_option("display.max_rows", None, "display.max_columns", None)
-            dataset_name=dataset_names[i]
-            dataset_length= len(dataset)
-            predictors= dataset[used_predictors].loc[2:dataset_length]
-            predictors= predictors.astype('float64')
-            [dataset_train,dataset_test]=split_data(predictors)
-            (letters_in_use,_)=opt.curve_fit(fit_tm_model,dataset_train,dataset_train['T_m (K)'],(starting_guesses[i]))
-            
-            if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
-            -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs) and letters_in_use[0]<0:
-                #st.write(letters_in_use)
-                hc_parameters[count,:]=letters_in_use
-                
-                avg_model_err[0]=avg_model_err[0]+(statistics.mean(np.absolute(fit_tm_model_err
-                (dataset_test,letters_in_use)-dataset_test['T_m (K)']))/(number_of_runs))
-                avg_model_err[1]=avg_model_err[1]+(statistics.mean(np.absolute(fit_tm_model_err
-                (dataset_train,letters_in_use)-dataset_train['T_m (K)']))/(number_of_runs))
-                count=count+1
-                rmse_err[0]=rmse_err[0]+rmse((fit_tm_model_err(dataset_test,letters_in_use)),dataset_test['T_m (K)'])/(number_of_runs)
-                rmse_err[1]=rmse_err[1]+rmse((fit_tm_model_err(dataset_train,letters_in_use)),dataset_train['T_m (K)'])/(number_of_runs)
-
-        ax= (make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err))
-        
-        plots[i]= ax
-        #fig=plots[i]
-    plt.gcf()
-    plt.savefig('HC_plot.png',dpi=300)
-    st.write(plots[i])
-#endregion
-    ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
-    # Note: These errors will be wrong if MAKING_NEW_PLOTS = False, because they will just be showing the errors from 
-    st.markdown('''VBT model assuming Van der Waals interaction for hydrocarbon dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C, based on the average over five runs of the model.'''.format(avg_model_err[1],avg_model_err[0],rmse_err[1],rmse_err[0]) )
+    vbt_hc_dict['Plot'].savefig('HC_plot.png',dpi=300)
+    st.write(vbt_hc_dict['Plot'])
+    st.markdown('''VBT model assuming Van der Waals interaction for hydrocarbon dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C, based on the average over five runs of the model.'''.format(vbt_hc_dict['Average Absolute Error'][1],vbt_hc_dict['Average Absolute Error'][0],vbt_hc_dict['RMSE Error'][1],vbt_hc_dict['RMSE Error'][0]) )
 else: 
     hc_plot=Image.open('HC_plot.png')
+    # Here we just use the saved plot from the previous run. The caption won't have errors because the model wasn't recalculated
     st.image(hc_plot,caption='VBT model assuming Van der Waals interaction for hydrocarbon dataset.',use_column_width=True)
 
 r'''
@@ -406,336 +420,18 @@ r'''
 ### Machine Learning Model
 '''
 
-###################### Machine Learning Model Code #########################
-# Import parsed data  (after  MP outlier analysis) as dataframes (DON'T EDIT)
-#region
-quinone_ML_data=pd.read_csv('parsed_p_benzoquinone_216.csv')
-hydroquinone_ML_data=pd.read_csv('parsed_p_hydroquinone_204.csv')
-#endregion
+# Quinone ML Plot
+ml_bq_dict=ml_model(ml_dataset_dict,'Quinones',100,False)
 
-##### QUINONE ML  PLOT #########
-## EDIT BELOW HERE - Change working datase for Machine Learning Model ##
-# The 2 choices are "quinone_ML_data" or "hydroquinone_ML_data"
-working_ML_dataset=quinone_ML_data
-# The training set and test set will only re-shuffle if do_featurization is set to true. Otherwise it will use the training and test set as split in the previous run where do_featurization was set to true to avoid the time required to featurize. 
-do_featurization = False
-## EDIT ABOVE HERE - Change working dataset for Machine Learning Model ##
+ml_bq_dict['Plot'].savefig('ML_BQ_plot.png',dpi=300)
+st.write(ml_bq_dict['Plot'])
+st.markdown('''ML model for quinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C.'''.format(ml_bq_dict['Average Absolute Error'][1],ml_bq_dict['Average Absolute Error'][0],ml_bq_dict['RMSE Error'][1],ml_bq_dict['RMSE Error'][0]) )
 
-## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
-#region
-
-######
-## Make new features using mordred
-## Need to do on both training and test sets
-######
-
-if do_featurization:
-
-    [trainset,testset]=split_data(working_ML_dataset)
-    # I'm not sure why, but I had to add in the reset_index otherwise fits were really bad. There must be some dependency on the index in the regression calculation though I'm not sure why that would be the case.
-    trainset=trainset.reset_index()
-    testset=testset.reset_index()
-    # convert SMILES to molecule representation in rdkit
-    mols = [Chem.MolFromSmiles(m) for m in trainset.SMILES.tolist() if Chem.MolFromSmiles(m) != None]
-    mols_test = [Chem.MolFromSmiles(m) for m in testset.SMILES.tolist() if Chem.MolFromSmiles(m) != None]
-    
-    # use mordred to get new features
-    calc = Calculator(descriptors, ignore_3D=True)
-    mordredresults = calc.pandas(mols)
-    mordredresults_test= calc.pandas(mols_test)    
-    
-    # add the new features to the dataframe
-    trainset = trainset.join(mordredresults,how='inner')
-    testset = testset.join(mordredresults_test,how='inner')
-
-    if working_ML_dataset.equals(quinone_ML_data):
-        trainset.to_csv('training_featurized_bq.csv',index=False)
-        testset.to_csv('test_featurized_bq.csv',index=False)
-    elif working_ML_dataset.equals(hydroquinone_ML_data):
-        trainset.to_csv('training_featurized_hq.csv',index=False)
-        testset.to_csv('test_featurized_hq.csv',index=False)
-    else:
-        print('Not a valid working dataset')
-
-else:
-    if working_ML_dataset.equals(quinone_ML_data):
-        trainset = pd.read_csv('training_featurized_bq.csv')
-        testset = pd.read_csv('test_featurized_bq.csv')
-    elif working_ML_dataset.equals(hydroquinone_ML_data):
-        trainset = pd.read_csv('training_featurized_hq.csv')
-        testset = pd.read_csv('test_featurized_hq.csv')        
-  
-
-
-######
-## Standardization (want each feature to be a gaussian with zero mean and unit variance)
-######
-
-# drop non-numeric columns and ones for the melting point, so we only have columns of features
-# I don't know why, but LogP caused a problem during the standardization - dropping for now, but have to figure out
-# Now dropping everything but MW from the Reaxys, since we don't have it for the Na and K salts
-columns_to_drop_from_reaxys = ['InChI Key','SMILES','Type of Substance','mp_mean','mp_std','LogP','H Bond Donors','H Bond Acceptors','Rotatable Bonds','TPSA','Lipinski Number','Veber Number']
-
-if working_ML_dataset.equals(quinone_ML_data):
-    columns_to_drop_thatgavetrouble = ['MAXdO','MINdO']
-    # for bq these gave trouble: ['Unnamed: 0','MAXdO','MINdO']
-elif working_ML_dataset.equals(hydroquinone_ML_data):
-    columns_to_drop_thatgavetrouble = []
-
-columns_to_drop = columns_to_drop_from_reaxys + columns_to_drop_thatgavetrouble
-trainset_s = trainset.drop(columns=columns_to_drop)
-testset_s = testset.drop(columns=columns_to_drop)
-
-# drop columns where there is an error from mordred
-#print('Started with '+str(len(trainset_s.columns))+' features')
-trainset_s = trainset_s.select_dtypes(include=['float64','int'])
-#print('After dropping columns with mordred errors, have '+str(len(trainset_s.columns))+' features')
-
-# drop the same columns from the test set
-testset_s = testset_s[trainset_s.columns]
-
-# finally, do the standardization
-X = preprocessing.scale(trainset_s)
-# apply the same standardization to the test set
-scaler = preprocessing.StandardScaler().fit(trainset_s)
-X_test = scaler.transform(testset_s)
-
-######
-## Ridge regression
-######
-
-alpha = 100
-
-y = trainset.mp_mean.tolist()
-y_test = testset.mp_mean.tolist()
-
-rr = Ridge(alpha=alpha)
-rr.fit(X, y)
-w = rr.coef_
-intercept = rr.intercept_
-
-if working_ML_dataset.equals(quinone_ML_data):
-    ml_err_train_bq = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
-    ml_err_test_bq = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
-    ml_err_train_rmse_bq=np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
-    ml_err_test_rmse_bq=np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
-elif working_ML_dataset.equals(hydroquinone_ML_data):
-    ml_err_train_hq = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
-    ml_err_test_hq = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
-    ml_err_train_rmse_hq=np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
-    ml_err_test_rmse_hq=np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
-#print('Training error: '+str(ml_err_train))
-#print('Test error: '+str(ml_err_test))
-coeffs = pd.DataFrame(data={'label':trainset_s.columns, 'w':w, 'w_abs':np.abs(w)})
-
-#print(coeffs.sort_values(by='w_abs',ascending=False).head(20))
-
-######
-## Plotting
-######
-
-# Figure 2 - one plot
-
-plt.figure(figsize=(4,4), dpi=300)
-ax1 = plt.gca()
-ml_plot_train_points=ax1.scatter(y,np.dot(X,w)+intercept,s=5,c='k',alpha=0.7,linewidth=0)
-ax1.plot([-273,2000],[-273,2000],'k--',lw=1)
-ml_plot_test_points=ax1.scatter(y_test,np.dot(X_test,w)+intercept,s=5,c='r',alpha=0.7,linewidth=0)
-
-
-lims = [min(y+y_test)-5,max(y+y_test)+5]
-
-for theaxis in [ax1]:
-    
-    theaxis.set_aspect(1)
-    theaxis.set_xlim(lims)
-    theaxis.set_ylim(lims)
-
-    theaxis.set_xlabel(r"mp data ($^{\circ}$C)")
-    theaxis.set_ylabel("mp predicted ($^{\circ}$C)")
-    
-    for item in ([theaxis.xaxis.label, theaxis.yaxis.label, theaxis.yaxis.get_offset_text(), theaxis.xaxis.get_offset_text()]):
-        item.set_fontsize(12)
-    for item in (theaxis.get_xticklabels() + theaxis.get_yticklabels()):
-        item.set_fontsize(10)
-plt.legend((ml_plot_train_points,ml_plot_test_points),('Training Set','Test Set'))    
-plt.gcf().subplots_adjust(left=0.2,top=0.95,bottom=0.15,right=0.95)
-# plt.savefig(mainfolder+'/ML_potassiated_alpha100_onlymordred.png',format='png',dpi=300)
-
-if working_ML_dataset.equals(quinone_ML_data):
-    ml_plot_bq=plt.gcf()
-    plt.savefig('ML_BQ_plot.png',dpi=300)
-    st.write(ml_plot_bq)
-    st.markdown('''ML model for quinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C.'''.format(ml_err_train_bq,ml_err_test_bq,ml_err_train_rmse_bq,ml_err_test_rmse_bq) )
-elif working_ML_dataset.equals(hydroquinone_ML_data):
-    ml_plot_hq=plt.gcf()
-    plt.savefig('ML_HQ_plot.png',dpi=300)
-    st.write(ml_plot_hq)
-    st.markdown('''ML model for hydroquinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C.'''.format(ml_err_train_hq,ml_err_test_hq,ml_err_train_rmse_hq,ml_err_test_rmse_hq) )
-
-#print('Time to Run = ' + str(time.time()-starttime) + ' s')
-
-#endregion
-## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
-
-######### HYDROQUINONE ML PLOT ############## 
-
-working_ML_dataset=hydroquinone_ML_data
- 
-do_featurization = False
-## EDIT ABOVE HERE - Change working dataset for Machine Learning Model ##
-
-## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
-#region
-
-######
-## Make new features using mordred
-## Need to do on both training and test sets
-######
-
-if do_featurization:
-
-    [trainset,testset]=split_data(working_ML_dataset)
-    # I'm not sure why, but I had to add in the reset_index otherwise fits were really bad. There must be some dependency on the index in the regression calculation though I'm not sure why that would be the case.
-    trainset=trainset.reset_index()
-    testset=testset.reset_index()
-    # convert SMILES to molecule representation in rdkit
-    mols = [Chem.MolFromSmiles(m) for m in trainset.SMILES.tolist() if Chem.MolFromSmiles(m) != None]
-    mols_test = [Chem.MolFromSmiles(m) for m in testset.SMILES.tolist() if Chem.MolFromSmiles(m) != None]
-    
-    # use mordred to get new features
-    calc = Calculator(descriptors, ignore_3D=True)
-    mordredresults = calc.pandas(mols)
-    mordredresults_test= calc.pandas(mols_test)    
-    
-    # add the new features to the dataframe
-    trainset = trainset.join(mordredresults,how='inner')
-    testset = testset.join(mordredresults_test,how='inner')
-
-    if working_ML_dataset.equals(quinone_ML_data):
-        trainset.to_csv('training_featurized_bq.csv',index=False)
-        testset.to_csv('test_featurized_bq.csv',index=False)
-    elif working_ML_dataset.equals(hydroquinone_ML_data):
-        trainset.to_csv('training_featurized_hq.csv',index=False)
-        testset.to_csv('test_featurized_hq.csv',index=False)
-    else:
-        print('Not a valid working dataset')
-
-else:
-    if working_ML_dataset.equals(quinone_ML_data):
-        trainset = pd.read_csv('training_featurized_bq.csv')
-        testset = pd.read_csv('test_featurized_bq.csv')
-    elif working_ML_dataset.equals(hydroquinone_ML_data):
-        trainset = pd.read_csv('training_featurized_hq.csv')
-        testset = pd.read_csv('test_featurized_hq.csv')        
-  
-
-
-######
-## Standardization (want each feature to be a gaussian with zero mean and unit variance)
-######
-
-# drop non-numeric columns and ones for the melting point, so we only have columns of features
-# I don't know why, but LogP caused a problem during the standardization - dropping for now, but have to figure out
-# Now dropping everything but MW from the Reaxys, since we don't have it for the Na and K salts
-columns_to_drop_from_reaxys = ['InChI Key','SMILES','Type of Substance','mp_mean','mp_std','LogP','H Bond Donors','H Bond Acceptors','Rotatable Bonds','TPSA','Lipinski Number','Veber Number']
-
-if working_ML_dataset.equals(quinone_ML_data):
-    columns_to_drop_thatgavetrouble = ['MAXdO','MINdO']
-    # for bq these gave trouble: ['Unnamed: 0','MAXdO','MINdO']
-elif working_ML_dataset.equals(hydroquinone_ML_data):
-    columns_to_drop_thatgavetrouble = []
-
-columns_to_drop = columns_to_drop_from_reaxys + columns_to_drop_thatgavetrouble
-trainset_s = trainset.drop(columns=columns_to_drop)
-testset_s = testset.drop(columns=columns_to_drop)
-
-# drop columns where there is an error from mordred
-#print('Started with '+str(len(trainset_s.columns))+' features')
-trainset_s = trainset_s.select_dtypes(include=['float64','int'])
-#print('After dropping columns with mordred errors, have '+str(len(trainset_s.columns))+' features')
-
-# drop the same columns from the test set
-testset_s = testset_s[trainset_s.columns]
-
-# finally, do the standardization
-X = preprocessing.scale(trainset_s)
-# apply the same standardization to the test set
-scaler = preprocessing.StandardScaler().fit(trainset_s)
-X_test = scaler.transform(testset_s)
-
-######
-## Ridge regression
-######
-
-alpha = 100
-
-y = trainset.mp_mean.tolist()
-y_test = testset.mp_mean.tolist()
-
-rr = Ridge(alpha=alpha)
-rr.fit(X, y)
-w = rr.coef_
-intercept = rr.intercept_
-
-if working_ML_dataset.equals(quinone_ML_data):
-    ml_err_train_bq = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
-    ml_err_test_bq = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
-    ml_err_train_rmse_bq=np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
-    ml_err_test_rmse_bq=np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
-elif working_ML_dataset.equals(hydroquinone_ML_data):
-    ml_err_train_hq = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
-    ml_err_test_hq = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
-    ml_err_train_rmse_hq=np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
-    ml_err_test_rmse_hq=np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
-#print('Training error: '+str(ml_err_train))
-#print('Test error: '+str(ml_err_test))
-coeffs = pd.DataFrame(data={'label':trainset_s.columns, 'w':w, 'w_abs':np.abs(w)})
-
-#print(coeffs.sort_values(by='w_abs',ascending=False).head(20))
-
-######
-## Plotting
-######
-
-# Figure 2 - one plot
-
-plt.figure(figsize=(4,4), dpi=300)
-ax1 = plt.gca()
-ml_plot_train_points=ax1.scatter(y,np.dot(X,w)+intercept,s=5,c='k',alpha=0.7,linewidth=0)
-ax1.plot([-273,2000],[-273,2000],'k--',lw=1)
-ml_plot_test_points=ax1.scatter(y_test,np.dot(X_test,w)+intercept,s=5,c='r',alpha=0.7,linewidth=0)
-
-
-lims = [min(y+y_test)-5,max(y+y_test)+5]
-
-for theaxis in [ax1]:
-    
-    theaxis.set_aspect(1)
-    theaxis.set_xlim(lims)
-    theaxis.set_ylim(lims)
-
-    theaxis.set_xlabel(r"mp data ($^{\circ}$C)")
-    theaxis.set_ylabel("mp predicted ($^{\circ}$C)")
-    
-    for item in ([theaxis.xaxis.label, theaxis.yaxis.label, theaxis.yaxis.get_offset_text(), theaxis.xaxis.get_offset_text()]):
-        item.set_fontsize(12)
-    for item in (theaxis.get_xticklabels() + theaxis.get_yticklabels()):
-        item.set_fontsize(10)
-plt.legend((ml_plot_train_points,ml_plot_test_points),('Training Set','Test Set'))    
-plt.gcf().subplots_adjust(left=0.2,top=0.95,bottom=0.15,right=0.95)
-# plt.savefig(mainfolder+'/ML_potassiated_alpha100_onlymordred.png',format='png',dpi=300)
-
-if working_ML_dataset.equals(quinone_ML_data):
-    ml_plot_bq=plt.gcf()
-    plt.savefig('ML_BQ_plot.png',dpi=300)
-    st.write(ml_plot_bq)
-    st.markdown('''ML model for quinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C.'''.format(ml_err_train_bq,ml_err_test_bq,ml_err_train_rmse_bq,ml_err_test_rmse_bq) )
-elif working_ML_dataset.equals(hydroquinone_ML_data):
-    ml_plot_hq=plt.gcf()
-    plt.savefig('ML_HQ_plot.png',dpi=300)
-    st.write(ml_plot_hq)
-    st.markdown('''ML model for hydroquinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C.'''.format(ml_err_train_hq,ml_err_test_hq,ml_err_train_rmse_hq,ml_err_test_rmse_hq) )
+# Hydroquinone ML Plot
+ml_hq_dict=ml_model(ml_dataset_dict,'Hydroquinones',100,False)
+ml_hq_dict['Plot'].savefig('ML_HQ_plot.png',dpi=300)
+st.write(ml_hq_dict['Plot'])
+st.markdown('''ML model for hydroquinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C.'''.format(ml_hq_dict['Average Absolute Error'][1],ml_hq_dict['Average Absolute Error'][0],ml_hq_dict['RMSE Error'][1],ml_hq_dict['RMSE Error'][0]) )
 
 #print('Time to Run = ' + str(time.time()-starttime) + ' s')
 
@@ -752,83 +448,21 @@ We tested several different functional forms for the numerator, but found that $
 MAKING_NEW_PLOTS=True
 if MAKING_NEW_PLOTS:
     ## EDIT BELOW HERE
-    ### Change datasets used, model form, starting guesses
-    #region
-    # Change the datasets that you're interested in looking at in this block. Make sure you change the names of the datasets appropriately. Note: All datasets you include here will be tested with the same model form. If you want to test different model forms for different datasets, you will have to test one dataset at a time and change the model form as desired for that single dataset.
-    datasets= [quinone_data]
-    dataset_names= ['Quinone']
-    num_datasets= len(datasets)
 
     # CHANGE MODEL NAME AND FORM HERE:
     model_form_name= '$V_m^{-1}$ Numerator, Full Denominator'
     model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-1)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
 
-    # CHANGE STARTING GUESSES HERE
-    # Note: You must have the correct number of starting guesses to match the number of parameters in the model form, and you must also have the correct number of sets of starting guesses depending how many datasets you're testing at once.
-    starting_guesses= [[-1e+01,3e+02,-1e-01,1e-02,-8e-02,-3e-02]]
+    starting_guesses= [-1e+01,3e+02,-1e-01,1e-02,-8e-02,-3e-02]
+    dataset_name='Quinones'
+    num_runs=5
+    vbt_bq_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,model_form_name,starting_guesses,num_runs)
 
-    #endregion
-    ## EDIT ABOVE HERE
+    vbt_bq_dict['Plot'].savefig('BQ_plot.png',dpi=300)
 
-    ## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
-    #region
-    num_predictors= list(range(len(findstr(model_form, 'predictors'))))
-    used_predictors= []
-
-    for i in range(len(all_possible_predictors)):
-        this_predictor= all_possible_predictors[i]
-        if findstr(model_form, this_predictor):
-            used_predictors.append(this_predictor)
-    used_predictors= used_predictors+predicted
-    num_parameters= len(findstr(model_form, 'parameter'))
-
-    if num_parameters!=len(starting_guesses[0]):
-        raise Exception("Number of starting guesses doesn't match the number of parameters")
-
-    letters_in_use=letters_in_use[0:num_parameters]
-    num_parameters= list(range(num_parameters))
-
-    plots=list(range(num_datasets))
-    fig = plt.figure()      
-    for i in range(num_datasets):
-        avg_model_err=[0,0]
-        rmse_err=[0,0]
-        number_of_runs=5
-        count=0
-        bq_parameters=np.zeros((number_of_runs,len(num_parameters)))
-        while count < number_of_runs:
-            dataset= datasets[i]
-            pd.set_option("display.max_rows", None, "display.max_columns", None)
-            dataset_name=dataset_names[i]
-            dataset_length= len(dataset)
-            predictors= dataset[used_predictors].loc[2:dataset_length]
-            predictors= predictors.astype('float64')
-            [dataset_train,dataset_test]=split_data(predictors)
-            (letters_in_use,_)=opt.curve_fit(fit_tm_model,dataset_train,dataset_train['T_m (K)'],(starting_guesses[i]))
-            
-            if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
-            -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs) and letters_in_use[0]<0:
-                #st.write(letters_in_use)
-                bq_parameters[count,:]=letters_in_use
-                avg_model_err[0]=avg_model_err[0]+(statistics.mean(np.absolute(fit_tm_model_err
-                (dataset_test,letters_in_use)-dataset_test['T_m (K)']))/(number_of_runs))
-                avg_model_err[1]=avg_model_err[1]+(statistics.mean(np.absolute(fit_tm_model_err
-                (dataset_train,letters_in_use)-dataset_train['T_m (K)']))/(number_of_runs))
-                count=count+1
-                rmse_err[0]=rmse_err[0]+rmse((fit_tm_model_err(dataset_test,letters_in_use)),dataset_test['T_m (K)'])/(number_of_runs)
-                rmse_err[1]=rmse_err[1]+rmse((fit_tm_model_err(dataset_train,letters_in_use)),dataset_train['T_m (K)'])/(number_of_runs)
-
-        ax= (make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err))
-        
-        plots[i]= ax
-        #fig=plots[i]
-    plt.gcf()
-    plt.savefig('BQ_plot.png',dpi=300)
-    st.write(plots[i])
-#endregion
-    ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
-
-    st.markdown('''VBT model assuming dipole-dipole interaction for quinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C, based on the average over five runs of the model.'''.format(avg_model_err[1],avg_model_err[0],rmse_err[1],rmse_err[0]) )
+    st.write(vbt_bq_dict['Plot'])
+    # Figure caption incorporates calculated errors
+    st.markdown('''VBT model assuming dipole-dipole interaction for quinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C, based on the average over five runs of the model.'''.format(vbt_bq_dict['Average Absolute Error'][1],vbt_bq_dict['Average Absolute Error'][0],vbt_bq_dict['RMSE Error'][1],vbt_bq_dict['RMSE Error'][0]) )
 else: 
     bq_plot=Image.open('BQ_plot.png')
     st.image(bq_plot,caption='VBT model assuming dipole-dipole interaction for quinone dataset.',use_column_width=True)
@@ -836,82 +470,21 @@ else:
 # Hydroquinone Plot
 MAKING_NEW_PLOTS=True
 if MAKING_NEW_PLOTS:
-    ## EDIT BELOW HERE
-    ### Change datasets used, model form, starting guesses
-    #region
-    # Change the datasets that you're interested in looking at in this block. Make sure you change the names of the datasets appropriately. Note: All datasets you include here will be tested with the same model form. If you want to test different model forms for different datasets, you will have to test one dataset at a time and change the model form as desired for that single dataset.
-    datasets= [hydroquinone_data]
-    dataset_names= ['Hydroquinone']
-    num_datasets= len(datasets)
 
     # CHANGE MODEL NAME AND FORM HERE:
     model_form_name= '$V_m^{-1}$ Numerator, Full Denominator'
     model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-1)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
 
-    # CHANGE STARTING GUESSES HERE
-    # Note: You must have the correct number of starting guesses to match the number of parameters in the model form, and you must also have the correct number of sets of starting guesses depending how many datasets you're testing at once.
-    starting_guesses= [[-2e+01,5e+02,-7e-02,3e-02,2e-02,2e-02]]
+    starting_guesses= [-2e+01,5e+02,-7e-02,3e-02,2e-02,2e-02]
+    dataset_name='Hydroquinones'
+    num_runs=5
+    vbt_hq_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,model_form_name,starting_guesses,num_runs)
+    
+    vbt_hq_dict['Plot'].savefig('HQ_plot.png',dpi=300)
 
-    #endregion
-    ## EDIT ABOVE HERE
+    st.write(vbt_hq_dict['Plot'])
 
-    ## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
-    #region
-    num_predictors= list(range(len(findstr(model_form, 'predictors'))))
-    used_predictors= []
-
-    for i in range(len(all_possible_predictors)):
-        this_predictor= all_possible_predictors[i]
-        if findstr(model_form, this_predictor):
-            used_predictors.append(this_predictor)
-    used_predictors= used_predictors+predicted
-    num_parameters= len(findstr(model_form, 'parameter'))
-
-    if num_parameters!=len(starting_guesses[0]):
-        raise Exception("Number of starting guesses doesn't match the number of parameters")
-
-    letters_in_use=letters_in_use[0:num_parameters]
-    num_parameters= list(range(num_parameters))
-
-    plots=list(range(num_datasets))
-    fig = plt.figure()      
-    for i in range(num_datasets):
-        avg_model_err=[0,0]
-        rmse_err=[0,0]
-        number_of_runs=5
-        count=0
-        hq_parameters=np.zeros((number_of_runs,len(num_parameters)))
-        while count < number_of_runs:
-            dataset= datasets[i]
-            pd.set_option("display.max_rows", None, "display.max_columns", None)
-            dataset_name=dataset_names[i]
-            dataset_length= len(dataset)
-            predictors= dataset[used_predictors].loc[2:dataset_length]
-            predictors= predictors.astype('float64')
-            [dataset_train,dataset_test]=split_data(predictors)
-            (letters_in_use,_)=opt.curve_fit(fit_tm_model,dataset_train,dataset_train['T_m (K)'],(starting_guesses[i]))
-            
-            if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
-            -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs) and letters_in_use[0]<0:
-                #st.write(letters_in_use)
-                hq_parameters[count,:]=letters_in_use
-                avg_model_err[0]=avg_model_err[0]+(statistics.mean(np.absolute(fit_tm_model_err
-                (dataset_test,letters_in_use)-dataset_test['T_m (K)']))/(number_of_runs))
-                avg_model_err[1]=avg_model_err[1]+(statistics.mean(np.absolute(fit_tm_model_err
-                (dataset_train,letters_in_use)-dataset_train['T_m (K)']))/(number_of_runs))
-                count=count+1
-                rmse_err[0]=rmse_err[0]+rmse((fit_tm_model_err(dataset_test,letters_in_use)),dataset_test['T_m (K)'])/(number_of_runs)
-                rmse_err[1]=rmse_err[1]+rmse((fit_tm_model_err(dataset_train,letters_in_use)),dataset_train['T_m (K)'])/(number_of_runs)
-
-        ax= (make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err))
-        plots[i]= ax
-    plt.gcf()
-    plt.savefig('HQ_plot.png',dpi=300)
-    st.write(plots[i])
-#endregion
-    ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
-
-    st.markdown('''VBT model assuming dipole-dipole interaction for hydroquinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C, based on the average over five runs of the model.'''.format(avg_model_err[1],avg_model_err[0],rmse_err[1],rmse_err[0]) )
+    st.markdown('''VBT model assuming dipole-dipole interaction for hydroquinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C, based on the average over five runs of the model.'''.format(vbt_hq_dict['Average Absolute Error'][1],vbt_hq_dict['Average Absolute Error'][0],vbt_hq_dict['RMSE Error'][1],vbt_hq_dict['RMSE Error'][0]) )
 else: 
     hq_plot=Image.open('HQ_plot.png')
     st.image(hq_plot,caption='VBT model assuming dipole-dipole interaction for hydroquinone dataset.',use_column_width=True)
@@ -924,82 +497,20 @@ Upon observing the difficulties in maintaining a consistent sign for the eccentr
 # Combined Quinone + Hydroquinone Plot
 MAKING_NEW_PLOTS=True
 if MAKING_NEW_PLOTS:
-    ## EDIT BELOW HERE
-    ### Change datasets used, model form, starting guesses
-    #region
-    # Change the datasets that you're interested in looking at in this block. Make sure you change the names of the datasets appropriately. Note: All datasets you include here will be tested with the same model form. If you want to test different model forms for different datasets, you will have to test one dataset at a time and change the model form as desired for that single dataset.
-    datasets= [mega_database]
-    dataset_names= ['Quinones + Hydroquinones']
-    num_datasets= len(datasets)
 
     # CHANGE MODEL NAME AND FORM HERE:
     model_form_name= '$V_m^{-1}$ Numerator, Full Denominator'
     model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-1)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
 
-    # CHANGE STARTING GUESSES HERE
-    # Note: You must have the correct number of starting guesses to match the number of parameters in the model form, and you must also have the correct number of sets of starting guesses depending how many datasets you're testing at once.
-    starting_guesses= [[-2e+01,5e+02,-7e-02,3e-02,2e-02,2e-02]]
+    starting_guesses= [-2e+01,5e+02,-7e-02,3e-02,2e-02,2e-02]
+    dataset_name='Quinones + Hydroquinones'
+    num_runs=5
+    vbt_bqhq_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,model_form_name,starting_guesses,num_runs)
+    vbt_bqhq_dict['Plot'].savefig('BQHQ_plot.png',dpi=300)
 
-    #endregion
-    ## EDIT ABOVE HERE
+    st.write(vbt_bqhq_dict['Plot'])
 
-    ## STATIC BLOCK - DON'T MODIFY ANYTHING BELOW HERE ##
-    #region
-    num_predictors= list(range(len(findstr(model_form, 'predictors'))))
-    used_predictors= []
-
-    for i in range(len(all_possible_predictors)):
-        this_predictor= all_possible_predictors[i]
-        if findstr(model_form, this_predictor):
-            used_predictors.append(this_predictor)
-    used_predictors= used_predictors+predicted
-    num_parameters= len(findstr(model_form, 'parameter'))
-
-    if num_parameters!=len(starting_guesses[0]):
-        raise Exception("Number of starting guesses doesn't match the number of parameters")
-
-    letters_in_use=letters_in_use[0:num_parameters]
-    num_parameters= list(range(num_parameters))
-
-    plots=list(range(num_datasets))
-    fig = plt.figure()      
-    for i in range(num_datasets):
-        avg_model_err=[0,0]
-        rmse_err=[0,0]
-        number_of_runs=5
-        count=0
-        bqhq_parameters=np.zeros((number_of_runs,len(num_parameters)))
-        while count < number_of_runs:
-            dataset= datasets[i]
-            pd.set_option("display.max_rows", None, "display.max_columns", None)
-            dataset_name=dataset_names[i]
-            dataset_length= len(dataset)
-            predictors= dataset[used_predictors].loc[2:dataset_length]
-            predictors= predictors.astype('float64')
-            [dataset_train,dataset_test]=split_data(predictors)
-            (letters_in_use,_)=opt.curve_fit(fit_tm_model,dataset_train,dataset_train['T_m (K)'],(starting_guesses[i]))
-            
-            if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
-            -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs) and letters_in_use[0]<0:
-                #st.write(letters_in_use)
-                bqhq_parameters[count,:]=letters_in_use
-                avg_model_err[0]=avg_model_err[0]+(statistics.mean(np.absolute(fit_tm_model_err
-                (dataset_test,letters_in_use)-dataset_test['T_m (K)']))/(number_of_runs))
-                avg_model_err[1]=avg_model_err[1]+(statistics.mean(np.absolute(fit_tm_model_err
-                (dataset_train,letters_in_use)-dataset_train['T_m (K)']))/(number_of_runs))
-                count=count+1
-                rmse_err[0]=rmse_err[0]+rmse((fit_tm_model_err(dataset_test,letters_in_use)),dataset_test['T_m (K)'])/(number_of_runs)
-                rmse_err[1]=rmse_err[1]+rmse((fit_tm_model_err(dataset_train,letters_in_use)),dataset_train['T_m (K)'])/(number_of_runs)
-
-        ax= (make_plots(dataset_test,dataset_train,letters_in_use,dataset_name,avg_model_err,rmse_err))
-        plots[i]= ax
-    plt.gcf()
-    plt.savefig('BQHQ_plot.png',dpi=300)
-    st.write(plots[i])
-#endregion
-    ## STATIC BLOCK - DON'T MODIFY ANYTHING ABOVE HERE ##
-
-    st.markdown('''VBT model assuming dipole-dipole interaction for combined quinone and hydroquinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C, based on the average over five runs of the model.'''.format(avg_model_err[1],avg_model_err[0],rmse_err[1],rmse_err[0]) )
+    st.markdown('''VBT model assuming dipole-dipole interaction for combined quinone and hydroquinone dataset. Training set absolute average error is {:.2f} C and test set average absolute error is {:.2f} C. Training set RMSE is {:.2f} C and test set RMSE is {:.2f} C, based on the average over five runs of the model.'''.format(vbt_bqhq_dict['Average Absolute Error'][1],vbt_bqhq_dict['Average Absolute Error'][0],vbt_bqhq_dict['RMSE Error'][1],vbt_bqhq_dict['RMSE Error'][0]) )
 else: 
     hq_plot=Image.open('HQ_plot.png')
     st.image(hq_plot,caption='VBT model assuming dipole-dipole interaction for hydroquinone dataset.',use_column_width=True)
@@ -1028,10 +539,10 @@ ci_int_val=0.95
 ##### STATIC BLOCK BELOW (you know the drill)
 #region
 # This code will only work if we use the same model - can't change the number of parameters otherwise the columns will be mis-labeled
-hc_parameters_df=pd.DataFrame(data=hc_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
-bq_parameters_df=pd.DataFrame(data=bq_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
-hq_parameters_df=pd.DataFrame(data=hq_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
-bqhq_parameters_df=pd.DataFrame(data=bqhq_parameters,index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
+hc_parameters_df=pd.DataFrame(data=vbt_hc_dict['Parameter Values'],index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
+bq_parameters_df=pd.DataFrame(data=vbt_bq_dict['Parameter Values'],index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
+hq_parameters_df=pd.DataFrame(data=vbt_hq_dict['Parameter Values'],index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
+bqhq_parameters_df=pd.DataFrame(data=vbt_bqhq_dict['Parameter Values'],index=["Run 1","Run 2","Run 3","Run 4","Run 5"],columns=["g","h","a","b","c","d"])
 
 # datasets = [hc_parameters, bq_parameters, hq_parameters, bqhq_parameters]
 # for dataset in datasets:
