@@ -170,16 +170,16 @@ def ml_model(ml_dataset_dict, dataset_key, alpha=100, do_featurization = False):
         working_ML_dataset = working_ML_dataset.join(mordredresults,how='inner')
         # save to the appropriate file name depending on which dataset you're looking at
         if dataset_key=='Quinones':
-            working_ML_dataset.to_csv('featurized_bq.csv',index=False)
+            working_ML_dataset.to_csv('Data Files/featurized_bq.csv',index=False)
         elif dataset_key=='Hydroquinones':
-            working_ML_dataset.to_csv('featurized_hq.csv',index=False)
+            working_ML_dataset.to_csv('Data Files/featurized_hq.csv',index=False)
         else:
             print('Not a valid dataset key')            
     else:
         if dataset_key=='Quinones':
-            working_ML_dataset=pd.read_csv('featurized_bq.csv')
+            working_ML_dataset=pd.read_csv('Data Files/featurized_bq.csv')
         elif dataset_key=='Hydroquinones':
-            working_ML_dataset=pd.read_csv('featurized_hq.csv')
+            working_ML_dataset=pd.read_csv('Data Files/featurized_hq.csv')
    
    # Now the training set and test set shuffle every time you run the code. If we want to average the errors over multiple runs we can put this in another loop.
     [trainset,testset] = split_data(working_ML_dataset)
@@ -274,8 +274,8 @@ def ml_model(ml_dataset_dict, dataset_key, alpha=100, do_featurization = False):
 
     ml_model_dict={
         'Plot': model_plot,
-        'Average Absolute Error': avg_abs_err,
-        'RMSE Error': rmse_err,
+        'AAE': avg_abs_err,
+        'RMSE': rmse_err,
         'Model Coefficients': coeffs
     }
     return ml_model_dict
@@ -283,13 +283,13 @@ def ml_model(ml_dataset_dict, dataset_key, alpha=100, do_featurization = False):
 
 # Import data files for physics-based model into pandas dataframes
 # VBT Data
-quinone_data = pd.read_csv("Entropy and Volume Data - Quinones.csv")
-hydroquinone_data= pd.read_csv("Entropy and Volume Data - Hydroquinones.csv")
-hydrocarbon_data= pd.read_csv("Entropy and Volume Data - Hydrocarbons.csv")
+quinone_data = pd.read_csv("Data Files/Entropy and Volume Data - Quinones.csv")
+hydroquinone_data= pd.read_csv("Data Files/Entropy and Volume Data - Hydroquinones.csv")
+hydrocarbon_data= pd.read_csv("Data Files/Entropy and Volume Data - Hydrocarbons.csv")
 mega_database=pd.concat([hydroquinone_data,quinone_data])[['sigma','tau','V_m (nm3)','T_m (K)','Eccentricity(Ear)','Eccentricity(Eal)']].reset_index(drop=True)
 # ML Data
-quinone_ML_data=pd.read_csv('parsed_p_benzoquinone_216.csv')
-hydroquinone_ML_data=pd.read_csv('parsed_p_hydroquinone_204.csv')
+quinone_ML_data=pd.read_csv('Data Files/parsed_p_benzoquinone_216.csv')
+hydroquinone_ML_data=pd.read_csv('Data Files/parsed_p_hydroquinone_204.csv')
 # Make dictionary for VBT data
 dataset_dict={'Quinones':quinone_data,'Hydroquinones':hydroquinone_data,'Hydrocarbons':hydrocarbon_data,'Quinones + Hydroquinones':mega_database}
 # Make dictionary for ML data
@@ -406,8 +406,7 @@ where the parameters $a, b, c....$ will be different values from before.
 '''
 
 # Hydrocarbon plot
-MAKING_NEW_PLOTS=True
-if MAKING_NEW_PLOTS:
+if st.button('Generate New Hydrocarbon Plots'):
 
     # CHANGE MODEL DATASET, NAME AND FORM HERE:
     dataset_name='Hydrocarbons'
@@ -418,16 +417,24 @@ if MAKING_NEW_PLOTS:
     num_runs=5
     vbt_hc_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,starting_guesses,num_runs)
 
-    vbt_hc_dict['Plot'].savefig('HC_plot.png',dpi=300)
+    vbt_hc_dict['Plot'].savefig('Plots/VBT_HC_plot.png',dpi=300)
     st.write(vbt_hc_dict['Plot'])
-    st.markdown('''VBT model assuming Van der Waals interaction for hydrocarbon dataset. Training set average absolute error (AAE) is `{:.2f} C` and test set AAE is `{:.2f} C`. Training set root mean square error (RMSE) is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(vbt_hc_dict['Errors'].loc['Mean','Train AAE'],vbt_hc_dict['Errors'].loc['Mean','Test AAE'],vbt_hc_dict['Errors'].loc['Mean','Train RMSE'],vbt_hc_dict['Errors'].loc['Mean','Test RMSE']))
-    
-    st.write(vbt_hc_dict['Parameters'].rename(columns={0:'g',1:'h',2:'a',3:'b',4:'c',5:'d'}))
-    st.write(vbt_hc_dict['Errors'])
+
+    vbt_hc_dict['Parameters'] = vbt_hc_dict['Parameters'].rename(columns={0:'g',1:'h',2:'a',3:'b',4:'c',5:'d'})
+
+    vbt_hc_dict['Errors'].to_csv('Data Files/VBT_HC_Errors.csv')
+    vbt_hc_dict['Parameters'].to_csv('Data Files/VBT_HC_Parameters.csv')
 else: 
-    hc_plot=Image.open('HC_plot.png')
+    hc_plot=Image.open('Plots/VBT_HC_plot.png')
+
+    vbt_hc_dict = {'Errors': pd.read_csv('Data Files/VBT_HC_Errors.csv',header=0,index_col=0), 'Parameters': pd.read_csv('Data Files/VBT_HC_Parameters.csv',header=0,index_col=0)}
     # Here we just use the saved plot from the previous run. The caption won't have errors because the model wasn't recalculated
-    st.image(hc_plot,caption='VBT model assuming Van der Waals interaction for hydrocarbon dataset.',use_column_width=True)
+    st.image(hc_plot,use_column_width=True)
+
+
+st.markdown('''VBT model assuming Van der Waals interaction for hydrocarbon dataset. Training set average absolute error (AAE) is `{:.2f} C` and test set AAE is `{:.2f} C`. Training set root mean square error (RMSE) is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_hc_dict['Errors'].loc['Mean','Train AAE']),float(vbt_hc_dict['Errors'].loc['Mean','Test AAE']),float(vbt_hc_dict['Errors'].loc['Mean','Train RMSE']),float(vbt_hc_dict['Errors'].loc['Mean','Test RMSE'])))
+st.write(vbt_hc_dict['Errors'])
+st.write(vbt_hc_dict['Parameters'])
 
 r'''
 Both the average absolute and root mean square errors for the hydrocarbon dataset were around 30 C or less for both the training set and test set, which is comparable to errors obtained for other melting point prediction models in literature (which did not use a test set) \cite{Preiss2011}.
@@ -457,24 +464,47 @@ r'''
 # ML Plots
 #region
 # Quinone ML Plot
-alpha_bq=st.slider('Quinone Ridge Regression alpha',min_value=0,max_value=200,value=100)
-ml_bq_dict=ml_model(ml_dataset_dict,'Quinones',alpha_bq,False)
+alpha_bq=st.slider('Quinone Ridge Regression alpha (click Generate New Plot after setting)',min_value=0,max_value=200,value=100)
 
-ml_bq_dict['Plot'].savefig('ML_BQ_plot.png',dpi=300)
-st.write(ml_bq_dict['Plot'])
-st.markdown('''ML model for quinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`.'''.format(ml_bq_dict['Average Absolute Error'][1],ml_bq_dict['Average Absolute Error'][0],ml_bq_dict['RMSE Error'][1],ml_bq_dict['RMSE Error'][0]) )
+if st.button('Generate New Quinone ML Plot'):
+    ml_bq_dict=ml_model(ml_dataset_dict,'Quinones',alpha_bq,False)
+
+    ml_bq_dict['Plot'].savefig('Plots/ML_BQ_plot.png',dpi=300)
+    st.write(ml_bq_dict['Plot'])
+
+    pd.Series(ml_bq_dict['AAE']).to_csv('Data Files/ML_BQ_AAE.csv',index=False)
+    pd.Series(ml_bq_dict['RMSE']).to_csv('Data Files/ML_BQ_RMSE.csv',index=False)
+
+else:
+    ml_bq_plot=Image.open('Plots/ML_BQ_plot.png')
+    ml_bq_dict = {'RMSE': pd.read_csv('Data Files/ML_BQ_RMSE.csv',squeeze=True),'AAE': pd.read_csv('Data Files/ML_BQ_AAE.csv',squeeze=True),'Plot': ml_bq_plot}
+    
+    st.image(ml_bq_dict['Plot'],use_column_width=True)
+
+st.markdown('''ML model for quinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`.'''.format(ml_bq_dict['AAE'][1],ml_bq_dict['AAE'][0],ml_bq_dict['RMSE'][1],ml_bq_dict['RMSE'][0]) )
 
 # Hydroquinone ML Plot
-alpha_hq=st.slider('Hydroquinone Ridge Regression alpha',min_value=0,max_value=200,value=100)
-ml_hq_dict=ml_model(ml_dataset_dict,'Hydroquinones',alpha_hq,False)
-ml_hq_dict['Plot'].savefig('ML_HQ_plot.png',dpi=300)
-st.write(ml_hq_dict['Plot'])
-st.markdown('''ML model for hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`.'''.format(ml_hq_dict['Average Absolute Error'][1],ml_hq_dict['Average Absolute Error'][0],ml_hq_dict['RMSE Error'][1],ml_hq_dict['RMSE Error'][0]) )
+alpha_hq=st.slider('Hydroquinone Ridge Regression alpha (click Generate New Plot after setting)',min_value=0,max_value=200,value=100)
+
+if st.button('Generate New Hydroquinone ML Plot'):
+    ml_hq_dict=ml_model(ml_dataset_dict,'Hydroquinones',alpha_hq,False)
+    ml_hq_dict['Plot'].savefig('Plots/ML_HQ_plot.png',dpi=300)
+    st.write(ml_hq_dict['Plot'])
+    pd.Series(ml_hq_dict['AAE']).to_csv('Data Files/ML_HQ_AAE.csv',index=False)
+    pd.Series(ml_hq_dict['RMSE']).to_csv('Data Files/ML_HQ_RMSE.csv',index=False)
+else:
+    ml_hq_plot = Image.open('Plots/ML_HQ_Plot.png')
+    ml_hq_dict = {'RMSE': pd.read_csv('Data Files/ML_HQ_RMSE.csv',squeeze=True),'AAE': pd.read_csv('Data Files/ML_HQ_AAE.csv',squeeze=True)}
+    st.image(ml_hq_plot,use_column_width=True)
+
+st.markdown('''ML model for hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`.'''.format(ml_hq_dict['AAE'][1],ml_hq_dict['AAE'][0],ml_hq_dict['RMSE'][1],ml_hq_dict['RMSE'][0]) )
 
 #endregion
 
 r'''
 Both quinone and hydroquinone datasets were modeled using a default alpha value of 100. With repeated re-shuffling of the training and test sets, we find that the quinone ML both qualitatively and quantitatively has higher predictive power than the hydroquinone ML model. The quinone dataset average absolute errors are consistently less than 30 C for both the training and test sets, while for the hydroquinone dataset they are usually between 35-40 C. Visually, we also see that the quinone dataset follows the perfect prediction (dashed) trend line. On the other hand, the hydroquinone models appears skewed, such that the melting points of the lower $T_m$ molecules are overpredicted and those of the higher $T_m$ molecules are underpredicted. It appears that melting point has some dependence that is not as well-captured by the Mordred-generated features for the hydroquinones as it is for the quinones. As the molecular features are generated based just on the SMILES string of the molecule, it is difficult to imagine that complexities such intermolecular interactions (which we would expect to be higher for hydroquinones than quinones due to hydrogen bonding) are well-described by these calculated features. 
+
+Both models are highly susceptible to overfitting, as we can see by decreasing alpha. A value of alpha = 0 corresponds to a simple linear regression - there is no penalty for having more features with higher weights (parameters) included in the model. When we do lower alpha to 0, we see that the training set errors (both AAE and RMSE) drop to less than 20 C for the quinones and less than 50 C for the hydroquinones. However, the test set errors explode, with RMSEs above 1000 C for the quinones and 10^14 C for the hydroquinones. Again the model is noticeably worse for the hydroquinones.
 
 '''
 
@@ -484,12 +514,8 @@ The quinone and hydroquinone datasets were initially fitted to the model indepen
 
 '''
 # Quinone Plot
-MAKING_NEW_PLOTS=True
-if MAKING_NEW_PLOTS:
-    ## EDIT BELOW HERE
-
+if st.button('Generate New Quinone Plot'):
     # CHANGE MODEL FORM HERE:
-
     model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-1)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
 
     starting_guesses= [0,300,-0.01,0.01,-0.01,-0.01]
@@ -497,22 +523,23 @@ if MAKING_NEW_PLOTS:
     num_runs=5
     vbt_bq_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,starting_guesses,num_runs)
 
-    vbt_bq_dict['Plot'].savefig('BQ_plot.png',dpi=300)
-
+    vbt_bq_dict['Plot'].savefig('Plots/VBT_BQ_plot.png',dpi=300)
+    vbt_bq_dict['Parameters']=vbt_bq_dict['Parameters'].rename(columns={0:'g',1:'h',2:'a',3:'b',4:'c',5:'d'})
     st.write(vbt_bq_dict['Plot'])
-    # Figure caption incorporates calculated errors
-    st.markdown('''VBT model assuming dipole-dipole interaction for quinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(vbt_bq_dict['Errors'].loc['Mean','Train AAE'],vbt_bq_dict['Errors'].loc['Mean','Test AAE'],vbt_bq_dict['Errors'].loc['Mean','Train RMSE'],vbt_bq_dict['Errors'].loc['Mean','Test RMSE']))
-    
-    st.write(vbt_bq_dict['Parameters'].rename(columns={0:'g',1:'h',2:'a',3:'b',4:'c',5:'d'}))
-    st.write(vbt_bq_dict['Errors'])
+
+    vbt_bq_dict['Parameters'].to_csv('Data Files/VBT_BQ_Parameters.csv')
+    vbt_bq_dict['Errors'].to_csv('Data Files/VBT_BQ_Errors.csv')
 else: 
-    bq_plot=Image.open('BQ_plot.png')
-    st.image(bq_plot,caption='VBT model assuming dipole-dipole interaction for quinone dataset.',use_column_width=True)
-
+    bq_plot=Image.open('Plots/VBT_BQ_plot.png')
+    vbt_bq_dict = {'Errors': pd.read_csv('Data Files/VBT_BQ_Errors.csv',header=0,index_col=0), 'Parameters': pd.read_csv('Data Files/VBT_BQ_Parameters.csv',header=0,index_col=0)}
+    st.image(bq_plot,use_column_width=True)
+    # Figure caption incorporates calculated errors
+st.markdown('''VBT model assuming dipole-dipole interaction for quinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_bq_dict['Errors'].loc['Mean','Train AAE']),float(vbt_bq_dict['Errors'].loc['Mean','Test AAE']),float(vbt_bq_dict['Errors'].loc['Mean','Train RMSE']),float(vbt_bq_dict['Errors'].loc['Mean','Test RMSE'])))
+st.write(vbt_bq_dict['Errors'])
+st.write(vbt_bq_dict['Parameters'])
 # Hydroquinone Plot
-MAKING_NEW_PLOTS=True
-if MAKING_NEW_PLOTS:
-
+#MAKING_NEW_PLOTS=True
+if st.button('Generate New Hydroquinone Plot'):
     # CHANGE MODEL FORM HERE:
     model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-1)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
 
@@ -521,17 +548,21 @@ if MAKING_NEW_PLOTS:
     num_runs=5
     vbt_hq_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,starting_guesses,num_runs)
     
-    vbt_hq_dict['Plot'].savefig('HQ_plot.png',dpi=300)
+    vbt_hq_dict['Plot'].savefig('Plots/VBT_HQ_plot.png',dpi=300)
 
     st.write(vbt_hq_dict['Plot'])
 
-    st.markdown('''VBT model assuming dipole-dipole interaction for hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(vbt_hq_dict['Errors'].loc['Mean','Train AAE'],vbt_hq_dict['Errors'].loc['Mean','Test AAE'],vbt_hq_dict['Errors'].loc['Mean','Train RMSE'],vbt_hq_dict['Errors'].loc['Mean','Test RMSE']))
-
-    st.write(vbt_hq_dict['Parameters'].rename(columns={0:'g',1:'h',2:'a',3:'b',4:'c',5:'d'}))
-    st.write(vbt_hq_dict['Errors'])
+    vbt_hq_dict['Parameters'] = vbt_hq_dict['Parameters'].rename(columns={0:'g',1:'h',2:'a',3:'b',4:'c',5:'d'})
+    vbt_hq_dict['Parameters'].to_csv('Data Files/VBT_HQ_Parameters.csv')
+    vbt_hq_dict['Errors'].to_csv('Data Files/VBT_HQ_Errors.csv')
 else: 
-    hq_plot=Image.open('HQ_plot.png')
-    st.image(hq_plot,caption='VBT model assuming dipole-dipole interaction for hydroquinone dataset.',use_column_width=True)
+    hq_plot=Image.open('Plots/VBT_HQ_plot.png')
+    st.image(hq_plot,use_column_width=True)
+    vbt_hq_dict = {'Errors': pd.read_csv('Data Files/VBT_HQ_Errors.csv',index_col=0,header=0),'Parameters': pd.read_csv('Data Files/VBT_HQ_Parameters.csv',header=0,index_col=0)}
+
+st.markdown('''VBT model assuming dipole-dipole interaction for hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_hq_dict['Errors'].loc['Mean','Train AAE']),float(vbt_hq_dict['Errors'].loc['Mean','Test AAE']),float(vbt_hq_dict['Errors'].loc['Mean','Train RMSE']),float(vbt_hq_dict['Errors'].loc['Mean','Test RMSE'])))
+st.write(vbt_hq_dict['Parameters'])
+st.write(vbt_hq_dict['Errors'])
 
 r'''
 
@@ -545,38 +576,48 @@ For consistency, we also applied this further simplified model to the hydroquino
 '''
 
 # Quinone 5 parameter plot (only constant in numerator)
-MAKING_NEW_PLOTS = True
-if MAKING_NEW_PLOTS:
+
+if st.button('Generate New Quinone Plot without Vm feature'):
     model_form = '(parameters[0])/(parameters[1]*np.log(predictors["sigma"])+parameters[2]*predictors["tau"]+1+parameters[3]*np.log(predictors["Eccentricity(Ear)"])+parameters[4]*np.log(predictors["Eccentricity(Eal)"]))'
     starting_guesses = [300,-0.01,0.01,-0.01,-0.01]
     num_runs = 5
     vbt_bq_5p=vbt_model_automated(dataset_dict,'Quinones',model_form,starting_guesses,num_runs)
-    vbt_bq_5p['Plot'].savefig('BQ_5p_plot.png',dpi=300)
+    vbt_bq_5p['Plot'].savefig('Plots/BQ_5p_plot.png',dpi=300)
 
-    st.markdown(''' #### Quinone 5 Parameter Plot ''')
+    vbt_bq_5p['Parameters'] = vbt_bq_5p['Parameters'].rename(columns={0:'g',1:'a',2:'b',3:'c',4:'d'})
     st.write(vbt_bq_5p['Plot'])
-    st.write(vbt_bq_5p['Parameters'].rename(columns={0:'g',1:'a',2:'b',3:'c',4:'d'}))
-    st.write(vbt_bq_5p['Errors'])
+
+    vbt_bq_5p['Parameters'].to_csv('Data Files/VBT_BQ_5p_Parameters.csv')
+    vbt_bq_5p['Errors'].to_csv('Data Files/VBT_BQ_5p_Errors.csv')
 else:
-    bq_5p_plot=Image.open('BQ_5p_plot.png')
-    st.image(bq_5p_plot,caption = 'Fundamental model with only fitted constant in numerator for quinone dataset')
+    bq_5p_plot=Image.open('Plots/BQ_5p_plot.png')
+    vbt_bq_5p = {'Errors': pd.read_csv('Data Files/VBT_BQ_5p_Errors.csv',header=0,index_col=0), 'Parameters': pd.read_csv('Data Files/VBT_BQ_5p_Parameters.csv',header=0,index_col=0)}
+    st.image(bq_5p_plot,use_column_width=True)
+
+st.markdown('''Thermodynamics model without molecular volume feature for quinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_bq_5p['Errors'].loc['Mean','Train AAE']),float(vbt_bq_5p['Errors'].loc['Mean','Test AAE']),float(vbt_bq_5p['Errors'].loc['Mean','Train RMSE']),float(vbt_bq_5p['Errors'].loc['Mean','Test RMSE'])))
+st.write(vbt_bq_dict['Errors'])
+st.write(vbt_bq_dict['Parameters'])
 
 # Hydroquinone 5 parameter plot
-MAKING_NEW_PLOTS = True
-if MAKING_NEW_PLOTS:
+if st.button('Generate New Hydroquinone Plot without Vm Feature'):
     model_form = '(parameters[0])/(parameters[1]*np.log(predictors["sigma"])+parameters[2]*predictors["tau"]+1+parameters[3]*np.log(predictors["Eccentricity(Ear)"])+parameters[4]*np.log(predictors["Eccentricity(Eal)"]))'
     starting_guesses = [400,-0.01,0.01,-0.01,-0.01]
     num_runs = 5
     vbt_hq_5p=vbt_model_automated(dataset_dict,'Hydroquinones',model_form,starting_guesses,num_runs)
-    vbt_hq_5p['Plot'].savefig('HQ_5p_plot.png',dpi=300)
+    vbt_hq_5p['Plot'].savefig('Plots/HQ_5p_plot.png',dpi=300)
     
-    st.markdown(''' #### Hydroquinone 5 Parameter Plot ''')
     st.write(vbt_hq_5p['Plot'])
-    st.write(vbt_hq_5p['Parameters'].rename(columns={0:'g',1:'a',2:'b',3:'c',4:'d'}))
-    st.write(vbt_hq_5p['Errors'])
+    vbt_hq_5p['Parameters'] = vbt_hq_5p['Parameters'].rename(columns={0:'g',1:'a',2:'b',3:'c',4:'d'})
+
+    vbt_hq_5p['Parameters'].to_csv('Data Files/VBT_HQ_5p_Parameters.csv')
+    vbt_hq_5p['Errors'].to_csv('Data Files/VBT_HQ_5p_Errors.csv')
 else:
-    hq_5p_plot=Image.open('HQ_5p_plot.png')
-    st.image(hq_5p_plot,caption = 'Fundamental model with only fitted constant in numerator for hydroquinone datset')
+    hq_5p_plot=Image.open('Plots/HQ_5p_plot.png')
+    vbt_hq_5p = {'Parameters': pd.read_csv('Data Files/VBT_HQ_5p_Parameters.csv', index_col=0, header=0),'Errors': pd.read_csv('Data Files/VBT_HQ_5p_Errors.csv',index_col=0,header=0)}
+    st.image(hq_5p_plot,use_column_width=True)
+st.markdown('''Thermodynamics model without molecular volume feature for hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_hq_5p['Errors'].loc['Mean','Train AAE']),float(vbt_hq_5p['Errors'].loc['Mean','Test AAE']),float(vbt_hq_5p['Errors'].loc['Mean','Train RMSE']),float(vbt_hq_5p['Errors'].loc['Mean','Test RMSE'])))
+st.write(vbt_hq_dict['Errors'])
+st.write(vbt_hq_dict['Parameters'])
 
 r'''
 Removing the volume term from the numerator appears to improve the consistency of the sign for the fitted parameters - all 
@@ -584,10 +625,13 @@ Removing the volume term from the numerator appears to improve the consistency o
 We also note that there appears to be a systematic underestimation of the melting points of the higher $T_m$ and an overestimate of the melting points of the lower $T_m$ molecules, or somewhat of a "flattening" effect. We attribute this systematic error to our model for enthalpy. By using all of the molecules in the dataset to generate one set of fitted parameters, we are effectively assuming that all molecules have the same types of intermolecular interactions. However, this is unlikely true, as the higher melting molecules most likely have stronger intermolecular interactions (perhaps hydrogen bonding), and thus should have higher enthalpies of melting. By combining different types of quinones molecules in this way, we are essentially taking an intermediate strength of intermolecular interaction and applying it to all the molecules in the dataset, which results in the over- and under- estimation that we see in our data. This was verified by analyzing the types of molecules on both ends of the spectrum to see if there were obvious reasons why the higher melting compounds might have stronger interactions and the lower melting compounds would have weaker interactions.
 
 Upon observing the difficulties in maintaining a consistent sign for the eccentricity parameters, which we suspected was due to the relative unimportance of it and the small dataset, we decided to combine both the quinone and hydroquinone datasets into a single dataset and fit a model to this larger dataset (~200 molecules). 
+
+We did not observe a significant difference between the test set and training set errors for the thermodynamics-based models - they were almost always within 10 C of each other (in fact, the test set error was sometimes lower than the training set error), indicating that overfitting is not an issue with the model. Therefore we did not feel the need to incorporate an overfitting "penalty" similar to the alpha parameter in the machine learning model - the mathematics of incorporating this penalty become far more complicated with non-linear models.
+
 '''
 # Combined Quinone + Hydroquinone Plot
-MAKING_NEW_PLOTS=True
-if MAKING_NEW_PLOTS:
+
+if st.button('Generate New Combined Quinone + Hydroquinone Plot'):
 
     # CHANGE MODEL FORM HERE:
     model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-1)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
@@ -596,17 +640,22 @@ if MAKING_NEW_PLOTS:
     dataset_name='Quinones + Hydroquinones'
     num_runs=5
     vbt_bqhq_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,starting_guesses,num_runs)
-    vbt_bqhq_dict['Plot'].savefig('BQHQ_plot.png',dpi=300)
+    vbt_bqhq_dict['Plot'].savefig('Plots/VBT_BQHQ_plot.png',dpi=300)
 
     st.write(vbt_bqhq_dict['Plot'])
 
-    st.markdown('''VBT model assuming dipole-dipole interaction for combined quinone and hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(vbt_bqhq_dict['Errors'].loc['Mean','Train AAE'],vbt_bqhq_dict['Errors'].loc['Mean','Test AAE'],vbt_bqhq_dict['Errors'].loc['Mean','Train RMSE'],vbt_bqhq_dict['Errors'].loc['Mean','Test RMSE'])) 
-
-    st.write(vbt_bqhq_dict['Parameters'].rename(columns={0:'g',1:'h',2:'a',3:'b',4:'c',5:'d'}))
-    st.write(vbt_bqhq_dict['Errors'])
+    vbt_bqhq_dict['Parameters'] = vbt_bqhq_dict['Parameters'].rename(columns={0:'g',1:'h',2:'a',3:'b',4:'c',5:'d'})
+    vbt_bqhq_dict['Parameters'].to_csv('Data Files/VBT_BQHQ_Parameters.csv')
+    vbt_bqhq_dict['Errors'].to_csv('Data Files/VBT_BQHQ_Errors.csv')
 else: 
-    hq_plot=Image.open('HQ_plot.png')
-    st.image(hq_plot,caption='VBT model assuming dipole-dipole interaction for hydroquinone dataset.',use_column_width=True)
+    bqhq_plot=Image.open('Plots/VBT_BQHQ_plot.png')
+    vbt_bqhq_dict = {'Parameters': pd.read_csv('Data Files/VBT_BQHQ_Parameters.csv',index_col=0,header=0),'Errors': pd.read_csv('Data Files/VBT_BQHQ_Errors.csv',index_col=0,header=0)}
+    st.image(bqhq_plot,use_column_width=True)
+
+
+st.markdown('''VBT model assuming dipole-dipole interaction for combined quinone and hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_bqhq_dict['Errors'].loc['Mean','Train AAE']),float(vbt_bqhq_dict['Errors'].loc['Mean','Test AAE']),float(vbt_bqhq_dict['Errors'].loc['Mean','Train RMSE']),float(vbt_bqhq_dict['Errors'].loc['Mean','Test RMSE']))) 
+st.write(vbt_bqhq_dict['Parameters'])
+st.write(vbt_bqhq_dict['Errors'])
 
 # Experimental Section
 r'''
@@ -626,6 +675,13 @@ To build our quinone and hydroquinone datasets, we used crystal structure data a
 We wrote a script that allowed us to specify any functional form of the model that we wanted to test on our datasets. This allowed us to test several different forms of the model to determine what enthalpy relation had the most predictive power. The function ``optimize.curve\textunderscore fit" in the python library ``scipy" was used to calculate values for the parameters in our model, given reasonable starting guesses. All datasets were randomly split into a training and test set, and the model parameters were fitted using only the training set. The resulting equation was then used to calculate the predicted melting points for both the training and test sets. Both the training and test set errors were calculated independently - both the average absolute error and the root mean square errors were calculated.
 
 '''
+
+r'''
+## References
+
+To be added in Overleaf
+'''
+
 
 # How to put code in markdown using python formatting
     # '''
