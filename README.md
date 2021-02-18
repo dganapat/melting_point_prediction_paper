@@ -28,4 +28,4 @@ Notes:
 
 Some blocks of code are hidden inside "regions". To open them up, just click on the little arrow next to where you see the code #region...
 
-The hydroquinone ML dataset is really sensitive to the test-train split. On most runs, it doesn't track the ideal line very well as the benzoquinone plot does. I need to compare this to the aionics output to see if they have the same issue.
+The hydroquinone ML dataset is really sensitive to the test-train split. On most runs, it doesn't track the ideal line very well as the benzoquinone plot does. I need to compare this to the aionics output to see if they have the same issue (Update: the data does have the same issue, so this is inherent to our hydroquinone dataset, not our method).

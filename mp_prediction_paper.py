@@ -50,22 +50,25 @@ def fit_tm_model_err(predictors,*parameter):
 
 def make_plots(dataset_test,dataset_train,letters_in_use, dataset_name):
     Tbuffer= 25
-    lowerT =min ( min(dataset_test['T_m (K)']),min(dataset_train['T_m (K)']),min(fit_tm_model_err(dataset_test,letters_in_use)),min (fit_tm_model_err(dataset_train,letters_in_use)))
+    lowerT =min ( min(dataset_test['T_m (K)']),min(dataset_train['T_m (K)']),min(fit_tm_model_err(dataset_test,letters_in_use)),min (fit_tm_model_err(dataset_train,letters_in_use))) - 273
     lowerT=lowerT- Tbuffer
 
     higherT =max( max(dataset_test['T_m (K)']),max(dataset_train['T_m (K)'])
     ,max(fit_tm_model_err(dataset_test,
-    letters_in_use)),max(fit_tm_model_err(dataset_train,letters_in_use)))
+    letters_in_use)),max(fit_tm_model_err(dataset_train,letters_in_use))) - 273
     higherT=higherT+Tbuffer
 
-    fig, ax=plt.subplots()
-    ax.plot(dataset_train['T_m (K)'],fit_tm_model_err(dataset_train,
-    letters_in_use),'ko')
-    ax.plot(dataset_test['T_m (K)'],fit_tm_model_err(dataset_test,
-    letters_in_use),'ro')
+    
+    fig, ax=plt.subplots(figsize=(4,4), dpi=300)
+    
+    #ax.figure(figsize=(4,4), dpi=300)
+    ax.plot(dataset_train['T_m (K)']-273,fit_tm_model_err(dataset_train,
+    letters_in_use)-273,'ko',markersize=4)
+    ax.plot(dataset_test['T_m (K)']-273,fit_tm_model_err(dataset_test,
+    letters_in_use)-273,'ro',markersize=4)
     ax.plot([lowerT,higherT],[lowerT,higherT],color=((0.6,0.6,0.6)))
-    ax.set_ylabel('Predicted $T_m$ (K)')
-    ax.set_xlabel('Experimental $T_m$ (K)')
+    ax.set_ylabel('Predicted $T_m$ (°C)')
+    ax.set_xlabel('Experimental $T_m$ (°C)')
     #ax.set_title('Calculated vs Experimental $T_m$ for '+ model_form_name + ' - ' + dataset_name +'\n Test Error: ' + str(avg_model_err[0])+ '\n Train Error: ' + str(avg_model_err[1]) + '\n RMSE Test:'+ str(rmse_err[0])+ '\n RMSE Train:'+str(rmse_err[1]))
     ax.legend(('Training Set','Test Set'))
     ax.set_xlim([lowerT,higherT])
@@ -177,9 +180,9 @@ def ml_model(ml_dataset_dict, dataset_key, alpha=100, do_featurization = False):
             print('Not a valid dataset key')            
     else:
         if dataset_key=='Quinones':
-            working_ML_dataset=pd.read_csv('Data Files/featurized_bq.csv')
+            working_ML_dataset=pd.read_csv('Data Files/featurized_bq.csv',low_memory=False)
         elif dataset_key=='Hydroquinones':
-            working_ML_dataset=pd.read_csv('Data Files/featurized_hq.csv')
+            working_ML_dataset=pd.read_csv('Data Files/featurized_hq.csv',low_memory=False)
    
    # Now the training set and test set shuffle every time you run the code. If we want to average the errors over multiple runs we can put this in another loop.
     [trainset,testset] = split_data(working_ML_dataset)
@@ -243,7 +246,7 @@ def ml_model(ml_dataset_dict, dataset_key, alpha=100, do_featurization = False):
     #print('Test error: '+str(ml_err_test))
     coeffs = pd.DataFrame(data={'label':trainset_s.columns, 'w':w, 'w_abs':np.abs(w)})
 
-    #print(coeffs.sort_values(by='w_abs',ascending=False).head(20))
+    #st.write(coeffs.sort_values(by='w_abs',ascending=False).head(20))
 
     # Make plot
     model_plot=plt.figure(figsize=(4,4), dpi=300)
@@ -280,6 +283,59 @@ def ml_model(ml_dataset_dict, dataset_key, alpha=100, do_featurization = False):
     }
     return ml_model_dict
 
+def ml_model_vbt_features(vbt_dataset_dict,dataset_key,alpha=100):
+    full_dataset = vbt_dataset_dict[dataset_key][['sigma','tau','V_m (nm3)','T_m (K)','Eccentricity(Ear)','Eccentricity(Eal)']]
+    [trainset,testset] = split_data(full_dataset)
+    y = (trainset['T_m (K)']-273).tolist()
+    y_test = (testset['T_m (K)']-273).tolist()
+    trainset = trainset.drop(columns = ['T_m (K)'])
+    testset = testset.drop(columns = ['T_m (K)'])
+    X = preprocessing.scale(trainset)
+    scaler = preprocessing.StandardScaler().fit(trainset)
+    X_test = scaler.transform(testset)
+    #y = trainset['T_m (K)'].tolist()
+    #y_test = testset['T_m (K)'].tolist()
+    rr = Ridge(alpha=alpha)
+    rr.fit(X, y)
+    w = rr.coef_
+    intercept = rr.intercept_
+    avg_abs_err = np.zeros(2)
+    rmse_err = np.zeros(2)
+    avg_abs_err[1] = np.mean(np.abs(y-(np.dot(X,w)+intercept)))
+    avg_abs_err[0] = np.mean(np.abs(y_test-(np.dot(X_test,w)+intercept)))
+    rmse_err[1] = np.sqrt(((y - (np.dot(X,w)+intercept)) ** 2).mean())
+    rmse_err[0] = np.sqrt(((y_test-(np.dot(X_test,w)+intercept))**2).mean())
+    coeffs = pd.DataFrame(data={'label':trainset.columns, 'w':w, 'w_abs':np.abs(w)})
+    # Make plot
+    model_plot=plt.figure(figsize=(4,4), dpi=300)
+    ax1 = plt.gca()
+    ml_plot_train_points=ax1.scatter(y,np.dot(X,w)+intercept,c='k',alpha=1,linewidth=0)
+    ax1.plot([-273,2000],[-273,2000],'k--',lw=1)
+    ml_plot_test_points=ax1.scatter(y_test,np.dot(X_test,w)+intercept,c='r',alpha=1,linewidth=0)
+    lims = [min(y+y_test)-15,max(y+y_test)+15]
+    for theaxis in [ax1]:        
+        theaxis.set_aspect(1)
+        theaxis.set_xlim(lims)
+        theaxis.set_ylim(lims)
+        theaxis.set_xlabel(r"mp data ($^{\circ}$C)")
+        theaxis.set_ylabel("mp predicted ($^{\circ}$C)")
+        
+        for item in ([theaxis.xaxis.label, theaxis.yaxis.label, theaxis.yaxis.get_offset_text(), theaxis.xaxis.get_offset_text()]):
+            item.set_fontsize(12)
+        for item in (theaxis.get_xticklabels() + theaxis.get_yticklabels()):
+            item.set_fontsize(10)
+    plt.legend((ml_plot_train_points,ml_plot_test_points),('Training Set','Test Set'))    
+    plt.gcf().subplots_adjust(left=0.2,top=0.95,bottom=0.15,right=0.95)
+   
+    plt.close()
+    
+    ml_model_dict={
+        'Plot': model_plot,
+        'AAE': avg_abs_err,
+        'RMSE': rmse_err,
+        'Model Coefficients': coeffs
+    }
+    return ml_model_dict
 
 # Import data files for physics-based model into pandas dataframes
 # VBT Data
@@ -330,6 +386,8 @@ Many melting point prediction models employ group contribution method (GCM). Thi
 
 Our model utilizes simple molecular descriptors that can be calculated from the two-dimensional structure of the model from a semi-empirical model previously proposed by Dannenfelser and Yalkowsky\cite{DannenfelserEntropy}. The model also uses molecular volume data, which can be calculated using crystal structure data or density measurements, or predicted computationally\cite{Day2011}. The molecular volume data contains information about the strength of the interactions between molecules in the solid phase. This approach provides an advantage over GCM in that the molecular volume in the solid phase of a species inherently accounts for the interactions between molecules.
 
+We hypothesized that by grouping molecules that we expected to have similar scaling relationships for enthalpies of melting, we would be able to significantly reduce the number of features required to predict melting points of these molecules with an accuracy comparable to that of traditional machine learning approaches. 
+
 '''
 
 # Methods
@@ -354,7 +412,7 @@ From here, we sought to find equations that would describe the enthalpy and entr
 
 We use the equation developed by Dannenfelser and Yalkowsky\cite{DannenfelserEntropy} to estimate the entropy of melting:
 $$
-\Delta S_m= a*\textrm{ln}\sigma + b*\tau + c
+\Delta S_m= a \textrm{ln}\sigma + b \tau + c
 $$
 where $a,b,$ and $c$ are adjustable parameters to be fit with a non-linear least squares optimization function. 
 
@@ -371,7 +429,7 @@ Here, SP3 is the number of $\textrm{sp}^3$ chain atoms (not including end carbon
 This model was updated by Lian and Yalkowsky to include two more descriptors for entropy of melting in the Unified Physiochemical Property Estimation Relationships (UPPER) method \cite{LianUPPER2013}. These additional descriptors are 1) aromatic eccentricity - the number of atoms in aromatic rings, and 2) aliphatic eccentricity - the number of atoms in aliphatic (non-aromatic) rings. These terms capture the tendency of flat or elongated molecules to be partially ordered in the liquid (which decreases the change in entropy between the solid and liquid phase, thus decreasing the entropy of melting). Thus, the final form of the equation we used to model the entropy of melting was:
 
 $$
-    \Delta S_m= a*\textrm{ln}\sigma + b*\tau + c*\textrm{ln}\epsilon_{ar} + d*\textrm{ln}\epsilon_{al} + f
+    \Delta S_m= a \textrm{ln}\sigma + b \tau + c \textrm{ln}\epsilon_{ar} + d \textrm{ln}\epsilon_{al} + f
 $$
 
 In summary, we expect $a$ to be negative, $b$ to potentially vary depending on the dataset, $c$ to be negative, and $d$ to be negative.
@@ -387,18 +445,18 @@ By definition, the lattice energy is the  difference between the energies of the
 We confirmed that a correlation does exist between enthalpy of melting and lattice energy as calculated using VBT by examining a previously collected set of data for hydrocarbon molecules\cite{LianUPPER2013}. In these set of molecules, we expect VdW interactions to dominate. We use this understanding to represent the enthalpy of melting as:
 
 $$
-\Delta H_m= g*V_m^{-2}+h
+\Delta H_m= g V_m^{-2}+h
 $$
 
 Combining this with our equation for entropy of melting, we get the overall equation for melting point for hydrocarbons:
 
 $$
-    T_m=\frac{g*V_m^{-2}+h}{a*\textrm{ln}\sigma + b*\tau + c*\textrm{ln}\epsilon_{ar} + d*\textrm{ln}\epsilon_{al} + f}
+    T_m=\frac{g V_m^{-2}+h}{a \textrm{ln}\sigma + b \tau + c \textrm{ln}\epsilon_{ar} + d \textrm{ln}\epsilon_{al} + f}
 $$
 
-With a free constant in both the numerator and the denominator there are infinite possible solutions to the optimization problem. This makes the fitted parameters difficult to compare between different datasets (quinones, hydroquinones, and hydrocarbons). To mitigate this issue, we can normalize the equation by dividing numerator and denominator by one of the constants (this necessarily assumes that the parameter we normalize by is nonzero). Our model then becomes:
+With a free constant in both the numerator and the denominator there are infinite possible solutions to the optimization problem. This makes the fitted parameters difficult to compare between different datasets (quinones, hydroquinones, and hydrocarbons) and different train-test splits of the same dataset. To mitigate this issue, we can normalize the equation by dividing numerator and denominator by one of the constants (this necessarily assumes that the parameter we normalize by is nonzero) - this method was used by Preiss et al \cite{Preiss2011}. Our model then becomes:
 $$
-    T_m=\frac{g*V_m^{-2}+h}{a*\textrm{ln}\sigma + b*\tau + c*\textrm{ln}\epsilon_{ar} + d*\textrm{ln}\epsilon_{al} + 1}
+    T_m=\frac{g V_m^{-2}+h}{a \textrm{ln}\sigma + b \tau + c \textrm{ln}\epsilon_{ar} + d \textrm{ln}\epsilon_{al} + 1}
 $$
 
 where the parameters $a, b, c....$ will be different values from before.
@@ -406,6 +464,7 @@ where the parameters $a, b, c....$ will be different values from before.
 '''
 
 # Hydrocarbon plot
+#region
 if st.button('Generate New Hydrocarbon Plots'):
 
     # CHANGE MODEL DATASET, NAME AND FORM HERE:
@@ -417,7 +476,7 @@ if st.button('Generate New Hydrocarbon Plots'):
     num_runs=5
     vbt_hc_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,starting_guesses,num_runs)
 
-    vbt_hc_dict['Plot'].savefig('Plots/VBT_HC_plot.png',dpi=300)
+    vbt_hc_dict['Plot'].savefig('Plots/VBT_HC_plot.png',dpi=300,bbox_inches="tight")
     st.write(vbt_hc_dict['Plot'])
 
     vbt_hc_dict['Parameters'] = vbt_hc_dict['Parameters'].rename(columns={0:'g',1:'h',2:'a',3:'b',4:'c',5:'d'})
@@ -431,23 +490,23 @@ else:
     # Here we just use the saved plot from the previous run. The caption won't have errors because the model wasn't recalculated
     st.image(hc_plot,use_column_width=True)
 
-
 st.markdown('''VBT model assuming Van der Waals interaction for hydrocarbon dataset. Training set average absolute error (AAE) is `{:.2f} C` and test set AAE is `{:.2f} C`. Training set root mean square error (RMSE) is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_hc_dict['Errors'].loc['Mean','Train AAE']),float(vbt_hc_dict['Errors'].loc['Mean','Test AAE']),float(vbt_hc_dict['Errors'].loc['Mean','Train RMSE']),float(vbt_hc_dict['Errors'].loc['Mean','Test RMSE'])))
 st.write(vbt_hc_dict['Errors'])
 st.write(vbt_hc_dict['Parameters'])
+#endregion
 
 r'''
 Both the average absolute and root mean square errors for the hydrocarbon dataset were around 30 C or less for both the training set and test set, which is comparable to errors obtained for other melting point prediction models in literature (which did not use a test set) \cite{Preiss2011}.
 
 Our initial model for enthalpy of melting for the benzoquinone and hydroquinones was:
 $$
-\Delta H_m=g*V_m^{-1}+h
+\Delta H_m=gV_m^{-1}+h
 $$
 
 Resulting in an overall equation of: 
 
 $$
-T_m=\frac{g*V_m^{-1}+h}{a*\textrm{ln}\sigma + b*\tau + c*\textrm{ln}\epsilon_{ar} + d*\textrm{ln}\epsilon_{al} + 1}
+T_m=\frac{gV_m^{-1}+h}{a\textrm{ln}\sigma + b\tau + c\textrm{ln}\epsilon_{ar} + d\textrm{ln}\epsilon_{al} + 1}
 $$
 
 Where we have normalized the constant in the denominator for reasons discussed above.
@@ -474,14 +533,16 @@ if st.button('Generate New Quinone ML Plot'):
 
     pd.Series(ml_bq_dict['AAE']).to_csv('Data Files/ML_BQ_AAE.csv',index=False)
     pd.Series(ml_bq_dict['RMSE']).to_csv('Data Files/ML_BQ_RMSE.csv',index=False)
-
+    ml_bq_dict['Model Coefficients'].to_csv('Data Files/ML_BQ_Coefficients.csv',index=False)
 else:
     ml_bq_plot=Image.open('Plots/ML_BQ_plot.png')
-    ml_bq_dict = {'RMSE': pd.read_csv('Data Files/ML_BQ_RMSE.csv',squeeze=True),'AAE': pd.read_csv('Data Files/ML_BQ_AAE.csv',squeeze=True),'Plot': ml_bq_plot}
+    ml_bq_dict = {'RMSE': pd.read_csv('Data Files/ML_BQ_RMSE.csv',squeeze=True),'AAE': pd.read_csv('Data Files/ML_BQ_AAE.csv',squeeze=True),'Plot': ml_bq_plot,'Model Coefficients': pd.read_csv('Data Files/ML_BQ_Coefficients.csv')}
     
     st.image(ml_bq_dict['Plot'],use_column_width=True)
 
 st.markdown('''ML model for quinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`.'''.format(ml_bq_dict['AAE'][1],ml_bq_dict['AAE'][0],ml_bq_dict['RMSE'][1],ml_bq_dict['RMSE'][0]) )
+st.write(ml_bq_dict['Model Coefficients'].sort_values(by='w_abs',ascending=False).head(20))
+
 
 # Hydroquinone ML Plot
 alpha_hq=st.slider('Hydroquinone Ridge Regression alpha (click Generate New Plot after setting)',min_value=0,max_value=200,value=100)
@@ -492,12 +553,14 @@ if st.button('Generate New Hydroquinone ML Plot'):
     st.write(ml_hq_dict['Plot'])
     pd.Series(ml_hq_dict['AAE']).to_csv('Data Files/ML_HQ_AAE.csv',index=False)
     pd.Series(ml_hq_dict['RMSE']).to_csv('Data Files/ML_HQ_RMSE.csv',index=False)
+    ml_hq_dict['Model Coefficients'].to_csv('Data Files/ML_HQ_Coefficients.csv',index=False)
 else:
     ml_hq_plot = Image.open('Plots/ML_HQ_Plot.png')
-    ml_hq_dict = {'RMSE': pd.read_csv('Data Files/ML_HQ_RMSE.csv',squeeze=True),'AAE': pd.read_csv('Data Files/ML_HQ_AAE.csv',squeeze=True)}
+    ml_hq_dict = {'RMSE': pd.read_csv('Data Files/ML_HQ_RMSE.csv',squeeze=True),'AAE': pd.read_csv('Data Files/ML_HQ_AAE.csv',squeeze=True),'Model Coefficients': pd.read_csv('Data Files/ML_HQ_Coefficients.csv')}
     st.image(ml_hq_plot,use_column_width=True)
 
 st.markdown('''ML model for hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`.'''.format(ml_hq_dict['AAE'][1],ml_hq_dict['AAE'][0],ml_hq_dict['RMSE'][1],ml_hq_dict['RMSE'][0]) )
+st.write(ml_hq_dict['Model Coefficients'].sort_values(by='w_abs',ascending=False).head(20))
 
 #endregion
 
@@ -510,9 +573,12 @@ Both models are highly susceptible to overfitting, as we can see by decreasing a
 
 r'''
 ### Thermodynamics-Based Model
+#### With Molecular Volume Feature
 The quinone and hydroquinone datasets were initially fitted to the model independently (thus generating different values for a, b, c,...) to reflect the assumption that the strength of the dipole-dipole interaction varies between quinones and hydroquinones. This assumption will be evaluated and discussed later in the paper. They were later also combined into one dataset and fitted together to generate one model.
 
 '''
+# Quinone + Hydroquinoone VBT Plots
+#region
 # Quinone Plot
 if st.button('Generate New Quinone Plot'):
     # CHANGE MODEL FORM HERE:
@@ -523,7 +589,7 @@ if st.button('Generate New Quinone Plot'):
     num_runs=5
     vbt_bq_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,starting_guesses,num_runs)
 
-    vbt_bq_dict['Plot'].savefig('Plots/VBT_BQ_plot.png',dpi=300)
+    vbt_bq_dict['Plot'].savefig('Plots/VBT_BQ_plot.png',dpi=300,bbox_inches="tight")
     vbt_bq_dict['Parameters']=vbt_bq_dict['Parameters'].rename(columns={0:'g',1:'h',2:'a',3:'b',4:'c',5:'d'})
     st.write(vbt_bq_dict['Plot'])
 
@@ -537,8 +603,8 @@ else:
 st.markdown('''VBT model assuming dipole-dipole interaction for quinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_bq_dict['Errors'].loc['Mean','Train AAE']),float(vbt_bq_dict['Errors'].loc['Mean','Test AAE']),float(vbt_bq_dict['Errors'].loc['Mean','Train RMSE']),float(vbt_bq_dict['Errors'].loc['Mean','Test RMSE'])))
 st.write(vbt_bq_dict['Errors'])
 st.write(vbt_bq_dict['Parameters'])
+
 # Hydroquinone Plot
-#MAKING_NEW_PLOTS=True
 if st.button('Generate New Hydroquinone Plot'):
     # CHANGE MODEL FORM HERE:
     model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-1)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
@@ -548,7 +614,7 @@ if st.button('Generate New Hydroquinone Plot'):
     num_runs=5
     vbt_hq_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,starting_guesses,num_runs)
     
-    vbt_hq_dict['Plot'].savefig('Plots/VBT_HQ_plot.png',dpi=300)
+    vbt_hq_dict['Plot'].savefig('Plots/VBT_HQ_plot.png',dpi=300,bbox_inches="tight")
 
     st.write(vbt_hq_dict['Plot'])
 
@@ -561,30 +627,33 @@ else:
     vbt_hq_dict = {'Errors': pd.read_csv('Data Files/VBT_HQ_Errors.csv',index_col=0,header=0),'Parameters': pd.read_csv('Data Files/VBT_HQ_Parameters.csv',header=0,index_col=0)}
 
 st.markdown('''VBT model assuming dipole-dipole interaction for hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_hq_dict['Errors'].loc['Mean','Train AAE']),float(vbt_hq_dict['Errors'].loc['Mean','Test AAE']),float(vbt_hq_dict['Errors'].loc['Mean','Train RMSE']),float(vbt_hq_dict['Errors'].loc['Mean','Test RMSE'])))
-st.write(vbt_hq_dict['Parameters'])
 st.write(vbt_hq_dict['Errors'])
+st.write(vbt_hq_dict['Parameters'])
+
+#endregion
 
 r'''
-
-We tested several different functional forms for the numerator based on molecular volume, but found that $g V_m^{-1}+h$ consistently yielded the lowest errors. We calculated both the average absolute error (which has been reported in other melting point prediction literature\cite{Preiss2011}) and the root mean square error, which is commonly used in machine learning approaches\cite{Nigsch2006}. Interestingly, we found that low errors were also obtained with just a constant fitted parameter for enthalpy in our $T_m$ numerator for the quinone dataset. The errors without including the $V_m^{-1}$ feature were similar for both average absolute error (AAE) and root mean square error (RMSE). The sign for the parameter in front of the $V_m$ term also changed with each shuffle of the training and test set, indicating that for the quinone set, it was not a reliable predictor. This would imply that the intermolecular interactions in the solid phases of quinone molecules are not different enough to significantly affect the enthalpy of melting. We also observed that the coefficients for $\tau$, $\epsilon_{ar}$, and $\epsilon_{al}$ occasionally changed between splits of training and test sets. We suspected that this was due to the model attempting to compensate for the change in sign of the $V_m^{-1}$ coefficient. To test this, we removed the molecular volume term from the numerator and just used a fitted constant as a proxy for enthalpy:
+#### Without Molecular Volume Feature
+We tested several different functional forms for the numerator based on molecular volume, but found that $g V_m^{-1}+h$ consistently yielded the lowest errors. We calculated both the average absolute error (which has been reported in other melting point prediction literature\cite{Preiss2011}) and the root mean square error, which is commonly used in machine learning approaches\cite{Nigsch2006}. Interestingly, we found that low errors were also obtained with just a constant fitted parameter for enthalpy in our $T_m$ numerator for the quinone dataset. The errors without including the $V_m^{-1}$ feature were similar for both average absolute error (AAE) and root mean square error (RMSE). The sign for the parameter in front of the $V_m$ term also changed with each shuffle of the training and test set for the quinone set, indicating that it was not a reliable predictor. This would imply that the intermolecular interactions in the solid phases of quinone molecules are not different enough to significantly affect the enthalpy of melting. We also observed that the coefficients for $\tau$ (for the quinones), and $\epsilon_{ar}$ and $\epsilon_{al}$ (for the hydroquinones) changed between splits of training and test sets. We suspected that this was due to the model attempting to compensate for the change in sign of the $V_m^{-1}$ coefficient. To test this, we removed the molecular volume term from the numerator and just used a fitted constant as a proxy for enthalpy:
 
 $$
-T_m = \frac{g V_m^{-1}}{a \textrm{ln}\sigma + b \tau + c \textrm{ln}\epsilon_{ar} + d \textrm{ln}\epsilon_{al}}
+T_m = \frac{h}{a \textrm{ln}\sigma + b \tau + c \textrm{ln}\epsilon_{ar} + d \textrm{ln}\epsilon_{al}}
 $$
 
 For consistency, we also applied this further simplified model to the hydroquinone dataset.
 '''
 
-# Quinone 5 parameter plot (only constant in numerator)
-
+# No V_m (5 parameter) Plots
+#region
+# Quinone Plot
 if st.button('Generate New Quinone Plot without Vm feature'):
     model_form = '(parameters[0])/(parameters[1]*np.log(predictors["sigma"])+parameters[2]*predictors["tau"]+1+parameters[3]*np.log(predictors["Eccentricity(Ear)"])+parameters[4]*np.log(predictors["Eccentricity(Eal)"]))'
     starting_guesses = [300,-0.01,0.01,-0.01,-0.01]
     num_runs = 5
     vbt_bq_5p=vbt_model_automated(dataset_dict,'Quinones',model_form,starting_guesses,num_runs)
-    vbt_bq_5p['Plot'].savefig('Plots/BQ_5p_plot.png',dpi=300)
+    vbt_bq_5p['Plot'].savefig('Plots/BQ_5p_plot.png',dpi=300,bbox_inches="tight")
 
-    vbt_bq_5p['Parameters'] = vbt_bq_5p['Parameters'].rename(columns={0:'g',1:'a',2:'b',3:'c',4:'d'})
+    vbt_bq_5p['Parameters'] = vbt_bq_5p['Parameters'].rename(columns={0:'h',1:'a',2:'b',3:'c',4:'d'})
     st.write(vbt_bq_5p['Plot'])
 
     vbt_bq_5p['Parameters'].to_csv('Data Files/VBT_BQ_5p_Parameters.csv')
@@ -595,19 +664,19 @@ else:
     st.image(bq_5p_plot,use_column_width=True)
 
 st.markdown('''Thermodynamics model without molecular volume feature for quinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_bq_5p['Errors'].loc['Mean','Train AAE']),float(vbt_bq_5p['Errors'].loc['Mean','Test AAE']),float(vbt_bq_5p['Errors'].loc['Mean','Train RMSE']),float(vbt_bq_5p['Errors'].loc['Mean','Test RMSE'])))
-st.write(vbt_bq_dict['Errors'])
-st.write(vbt_bq_dict['Parameters'])
+st.write(vbt_bq_5p['Errors'])
+st.write(vbt_bq_5p['Parameters'])
 
-# Hydroquinone 5 parameter plot
+# Hydroquinone Plot
 if st.button('Generate New Hydroquinone Plot without Vm Feature'):
     model_form = '(parameters[0])/(parameters[1]*np.log(predictors["sigma"])+parameters[2]*predictors["tau"]+1+parameters[3]*np.log(predictors["Eccentricity(Ear)"])+parameters[4]*np.log(predictors["Eccentricity(Eal)"]))'
     starting_guesses = [400,-0.01,0.01,-0.01,-0.01]
     num_runs = 5
     vbt_hq_5p=vbt_model_automated(dataset_dict,'Hydroquinones',model_form,starting_guesses,num_runs)
-    vbt_hq_5p['Plot'].savefig('Plots/HQ_5p_plot.png',dpi=300)
+    vbt_hq_5p['Plot'].savefig('Plots/HQ_5p_plot.png',dpi=300,bbox_inches="tight")
     
     st.write(vbt_hq_5p['Plot'])
-    vbt_hq_5p['Parameters'] = vbt_hq_5p['Parameters'].rename(columns={0:'g',1:'a',2:'b',3:'c',4:'d'})
+    vbt_hq_5p['Parameters'] = vbt_hq_5p['Parameters'].rename(columns={0:'h',1:'a',2:'b',3:'c',4:'d'})
 
     vbt_hq_5p['Parameters'].to_csv('Data Files/VBT_HQ_5p_Parameters.csv')
     vbt_hq_5p['Errors'].to_csv('Data Files/VBT_HQ_5p_Errors.csv')
@@ -616,21 +685,22 @@ else:
     vbt_hq_5p = {'Parameters': pd.read_csv('Data Files/VBT_HQ_5p_Parameters.csv', index_col=0, header=0),'Errors': pd.read_csv('Data Files/VBT_HQ_5p_Errors.csv',index_col=0,header=0)}
     st.image(hq_5p_plot,use_column_width=True)
 st.markdown('''Thermodynamics model without molecular volume feature for hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_hq_5p['Errors'].loc['Mean','Train AAE']),float(vbt_hq_5p['Errors'].loc['Mean','Test AAE']),float(vbt_hq_5p['Errors'].loc['Mean','Train RMSE']),float(vbt_hq_5p['Errors'].loc['Mean','Test RMSE'])))
-st.write(vbt_hq_dict['Errors'])
-st.write(vbt_hq_dict['Parameters'])
+st.write(vbt_hq_5p['Errors'])
+st.write(vbt_hq_5p['Parameters'])
+#endregion
 
 r'''
-Removing the volume term from the numerator appears to improve the consistency of the sign for the fitted parameters - all 
+Removing the volume term from the numerator appears to somewhat improve the consistency of the sign for the fitted parameters. The sign of $b$ still changes between different test and trainint set splits for the quinone dataset, but the signs of $c$ and $d$ appear to stabilize to a negative value (as expected) for the hydroquinone dataset. This could indicate that $\tau$ is not a meaningful predictor of melting point for the quinone dataset
 
 We also note that there appears to be a systematic underestimation of the melting points of the higher $T_m$ and an overestimate of the melting points of the lower $T_m$ molecules, or somewhat of a "flattening" effect. We attribute this systematic error to our model for enthalpy. By using all of the molecules in the dataset to generate one set of fitted parameters, we are effectively assuming that all molecules have the same types of intermolecular interactions. However, this is unlikely true, as the higher melting molecules most likely have stronger intermolecular interactions (perhaps hydrogen bonding), and thus should have higher enthalpies of melting. By combining different types of quinones molecules in this way, we are essentially taking an intermediate strength of intermolecular interaction and applying it to all the molecules in the dataset, which results in the over- and under- estimation that we see in our data. This was verified by analyzing the types of molecules on both ends of the spectrum to see if there were obvious reasons why the higher melting compounds might have stronger interactions and the lower melting compounds would have weaker interactions.
 
 Upon observing the difficulties in maintaining a consistent sign for the eccentricity parameters, which we suspected was due to the relative unimportance of it and the small dataset, we decided to combine both the quinone and hydroquinone datasets into a single dataset and fit a model to this larger dataset (~200 molecules). 
 
-We did not observe a significant difference between the test set and training set errors for the thermodynamics-based models - they were almost always within 10 C of each other (in fact, the test set error was sometimes lower than the training set error), indicating that overfitting is not an issue with the model. Therefore we did not feel the need to incorporate an overfitting "penalty" similar to the alpha parameter in the machine learning model - the mathematics of incorporating this penalty become far more complicated with non-linear models.
+We did not observe a significant difference between the test set and training set errors for the thermodynamics-based models - they were almost always within 10 C of each other (in fact, the test set error was sometimes lower than the training set error), indicating that overfitting is not an issue with this model. Therefore we did not feel the need to incorporate an overfitting "penalty" similar to the alpha parameter in the machine learning model - the mathematics of incorporating this penalty become far more complicated with non-linear models.
 
 '''
 # Combined Quinone + Hydroquinone Plot
-
+#region
 if st.button('Generate New Combined Quinone + Hydroquinone Plot'):
 
     # CHANGE MODEL FORM HERE:
@@ -640,7 +710,7 @@ if st.button('Generate New Combined Quinone + Hydroquinone Plot'):
     dataset_name='Quinones + Hydroquinones'
     num_runs=5
     vbt_bqhq_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,starting_guesses,num_runs)
-    vbt_bqhq_dict['Plot'].savefig('Plots/VBT_BQHQ_plot.png',dpi=300)
+    vbt_bqhq_dict['Plot'].savefig('Plots/VBT_BQHQ_plot.png',dpi=300,bbox_inches="tight")
 
     st.write(vbt_bqhq_dict['Plot'])
 
@@ -654,8 +724,59 @@ else:
 
 
 st.markdown('''VBT model assuming dipole-dipole interaction for combined quinone and hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_bqhq_dict['Errors'].loc['Mean','Train AAE']),float(vbt_bqhq_dict['Errors'].loc['Mean','Test AAE']),float(vbt_bqhq_dict['Errors'].loc['Mean','Train RMSE']),float(vbt_bqhq_dict['Errors'].loc['Mean','Test RMSE']))) 
-st.write(vbt_bqhq_dict['Parameters'])
 st.write(vbt_bqhq_dict['Errors'])
+st.write(vbt_bqhq_dict['Parameters'])
+#endregion
+
+r'''
+#### Machine Learning Model with Thermodynamic Features
+'''
+# Quinone plot
+alpha_bq_vbt=st.slider('Quinone Ridge Regression alpha (click Generate New Plot after setting)',min_value=0,max_value=10,value=1)
+if st.button('Generate new Quinone ML Plot (with thermodynamic features)'):
+    bq_ml_vbt = ml_model_vbt_features(dataset_dict,'Quinones',alpha_bq_vbt)
+
+    bq_ml_vbt['Plot'].savefig('Plots/ML_BQ_VBT_plot.png',dpi=300)
+    st.write(bq_ml_vbt['Plot'])
+
+    pd.Series(bq_ml_vbt['AAE']).to_csv('Data Files/ML_BQ_VBT_AAE.csv',index=False)
+    pd.Series(bq_ml_vbt['RMSE']).to_csv('Data Files/ML_BQ_VBT_RMSE.csv',index=False)
+    bq_ml_vbt['Model Coefficients'].to_csv('Data Files/ML_BQ_VBT_Coefficients.csv',index=False)
+else:
+    bq_ml_vbt_plot=Image.open('Plots/ML_BQ_VBT_plot.png')
+    bq_ml_vbt = {'RMSE': pd.read_csv('Data Files/ML_BQ_VBT_RMSE.csv',squeeze=True),'AAE': pd.read_csv('Data Files/ML_BQ_VBT_AAE.csv',squeeze=True),'Plot': bq_ml_vbt_plot,'Model Coefficients': pd.read_csv('Data Files/ML_BQ_VBT_Coefficients.csv')}
+    
+    st.image(bq_ml_vbt['Plot'],use_column_width=True)
+
+st.markdown('''ML model for quinone dataset using VBT features. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`.'''.format(bq_ml_vbt['AAE'][1],bq_ml_vbt['AAE'][0],bq_ml_vbt['RMSE'][1],bq_ml_vbt['RMSE'][0]) )
+st.write(bq_ml_vbt['Model Coefficients'].sort_values(by='w_abs',ascending=False))
+
+# Hydroquinone plot
+alpha_hq_vbt=st.slider('Hydroquinone Ridge Regression alpha (click Generate New Plot after setting)',min_value=0,max_value=10,value=1)
+if st.button('Generate new Hydroquinone ML Plot (with thermodynamic features)'):
+    hq_ml_vbt = ml_model_vbt_features(dataset_dict,'Hydroquinones',alpha_hq_vbt)
+
+    hq_ml_vbt['Plot'].savefig('Plots/ML_HQ_VBT_plot.png',dpi=300)
+    st.write(hq_ml_vbt['Plot'])
+
+    pd.Series(hq_ml_vbt['AAE']).to_csv('Data Files/ML_HQ_VBT_AAE.csv',index=False)
+    pd.Series(hq_ml_vbt['RMSE']).to_csv('Data Files/ML_HQ_VBT_RMSE.csv',index=False)
+    hq_ml_vbt['Model Coefficients'].to_csv('Data Files/ML_HQ_VBT_Coefficients.csv',index=False)
+else:
+    hq_ml_vbt_plot=Image.open('Plots/ML_HQ_VBT_plot.png')
+    hq_ml_vbt = {'RMSE': pd.read_csv('Data Files/ML_HQ_VBT_RMSE.csv',squeeze=True),'AAE': pd.read_csv('Data Files/ML_HQ_VBT_AAE.csv',squeeze=True),'Plot': hq_ml_vbt_plot,'Model Coefficients': pd.read_csv('Data Files/ML_HQ_VBT_Coefficients.csv')}
+    
+    st.image(hq_ml_vbt['Plot'],use_column_width=True)
+
+st.markdown('''ML model for hydroquinone dataset using VBT features. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`.'''.format(hq_ml_vbt['AAE'][1],hq_ml_vbt['AAE'][0],hq_ml_vbt['RMSE'][1],hq_ml_vbt['RMSE'][0]) )
+st.write(hq_ml_vbt['Model Coefficients'].sort_values(by='w_abs',ascending=False))
+# Conclusion section
+r'''
+## Conclusion
+
+Melting point prediction is an immensely challenging problem that has yet to be fully solved. With this work, we hope to have demonstrated that a scientific understanding of the molecules of interest and their bonding environments, along with a thermodynamic understanding of the calculation of $T_m$ can aid in grouping molecules together so that a melting point can be predicted with very few features, with an accuracy comparable to that of traditional machine learning methods. This was shown to be particularly successful for our hydroquinone molecules, where the thermodynamics-based model outperformed the ML model, despite having only 6 (or 5) features.
+
+'''
 
 # Experimental Section
 r'''
@@ -663,7 +784,7 @@ r'''
 
 ### Machine Learning Model
 
-All of the data for this method was downloaded from the Reaxys database online (reaxys.com). For each of the quinone and hydroquinone datasets, a substructure search was performed with a structure editor query (benzoquinone example shown below in Figure \cite{bq_reaxys_search}). We limited our search to compounds witha molecular weight of less than 216 g/mol for the quinone-based molecules and 204 g/mol for the hydroquinone-based molecules. We then filtered the data by compounds which had melting points available from literature, and downloaded them using Reaxys's download feature.
+All of the data for this method was downloaded from the Reaxys database online (reaxys.com). For each of the quinone and hydroquinone datasets, a substructure search was performed with a structure editor query (benzoquinone example shown below in Figure \cite{bq_reaxys_search}). We limited our search to compounds with a molecular weight of less than 216 g/mol for the quinone-based molecules and 204 g/mol for the hydroquinone-based molecules. We then filtered the data by compounds which had melting points available from literature, and downloaded them using Reaxys's download feature.
 
 Once all the compounds were downloaded we had to further process the data for molecules that had multiple reported melting points. The Tietjen-Moore outlier test was employed to determine whether there were any outliers in the set of melting point data for each molecule, and remove outliers if they did exist. This test requires an initial hypothesis for how many outliers exist in the dataset, so we incrementally increased the hypothesized number of outliers until the range was less than 15 C, or we had thrown out more than half of the melting points in the set. If we had to eliminate more than half the melting points (outlier test failed), we removed that molecule from our dataset. In the end, a total of approximately 1100 quinone and 3200 hydroquinone molecules were used for the respective models.
 
@@ -672,8 +793,14 @@ The same function was used to generate the models for both the quinone and hydro
 ### Thermodynamics-Based Model
 To build our quinone and hydroquinone datasets, we used crystal structure data acquired from the Cambridge Crystallographic Data Centre (CCDC) to calculate the molecular volume for each compound. Molecular symmetry, torsional angles, and eccentrity values were calculated by visual inspection of the 2D molecular structure. The experimental melting points recorded in the CCDC database were used in our dataset, if they were reported. If the melting points were not reported in the CCDC, we found the reported melting points for the molecules in literature (sources listed in the database in SI). A total of 94 quinones, 94 hydroquinones, and 224 hydrocarbons were used in the analysis. 
 
-We wrote a script that allowed us to specify any functional form of the model that we wanted to test on our datasets. This allowed us to test several different forms of the model to determine what enthalpy relation had the most predictive power. The function ``optimize.curve\textunderscore fit" in the python library ``scipy" was used to calculate values for the parameters in our model, given reasonable starting guesses. All datasets were randomly split into a training and test set, and the model parameters were fitted using only the training set. The resulting equation was then used to calculate the predicted melting points for both the training and test sets. Both the training and test set errors were calculated independently - both the average absolute error and the root mean square errors were calculated.
+We wrote a script that allowed us to specify any functional form of the model that we wanted to test on our datasets. This allowed us to test several different forms of the model to determine what enthalpy relation had the most predictive power. The function "optimize.curve_fit" in the python library "scipy" was used to calculate values for the parameters in our model, given reasonable starting guesses. All datasets were randomly split into a training and test set, and the model parameters were fitted using only the training set. The resulting equation was then used to calculate the predicted melting points for both the training and test sets. Both the training and test set errors were calculated independently - both the average absolute error and the root mean square errors were calculated.
 
+'''
+
+r'''
+## Acknowledgements
+
+This work was supported in part by ExxonMobil and the National Science Foundation. This analysis would not have been possible without the creators of the following python packages: Streamlit, pandas, numpy, matplotlib, scipy, statistics, sklearn, rdkit, and mordred. Building our ML datasets was made possible using the Reaxys database. Acquiring crystal structures for most of the compounds in our datasets was made significantly helped by the CCDC. 
 '''
 
 r'''
@@ -682,7 +809,11 @@ r'''
 To be added in Overleaf
 '''
 
+r'''
+## Supplementary Information
 
+All data and code used in our analysis can be viewed in our repository (URL: XX) - readers can test different model forms by downloading the repository and changing the model form for the desired dataset in the mp_prediction_paper.py script. If viewing this paper in our Streamlit app, readers have the option to re-shuffle the training and test sets and view the results by clicking "Generate New Plot" for the relevant dataset and model type (but will not be able to test different model forms). The displayed errors and parameter values will automatically update as well.
+'''
 # How to put code in markdown using python formatting
     # '''
     # ```python
@@ -697,3 +828,8 @@ To be added in Overleaf
     # Played around with Aionics - we see the same systematic trend for the hydroquinone set (even though it dropped 1000 samples) indicating that this is something intrinsic to the hydroquinones, not a problem with our code!
     # What goes in experimental vs in methods?
     # Look at the molecules between different test-train set splits to see why the first split generated a good fit. Off the bat, test set errors are much higher for the hydroquinone split that appears to follow the trendline despite same alpha
+    # Figure out how to properly cite python libraries
+    # See if there's a good citation package for python
+    # Compare other models that would be physically relevant
+    # k means clustering in the physics-based data
+    # 
