@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
+#import pandas as pd
 import scipy.optimize as opt
 import statistics
 from sklearn.linear_model import LinearRegression
@@ -112,15 +112,12 @@ def vbt_model_automated(dataset_dictionary, dataset_name, model_form, starting_g
     test_rmse_err=[]
     count=0
     parameters_from_runs=np.zeros((number_of_runs,len(num_parameters)))
+    dataset= dataset_dictionary[dataset_name]
+    #dataset_length= len(dataset)
+    predictors=dataset[used_predictors].astype('float64')
     while count < number_of_runs:
-        dataset= dataset_dictionary[dataset_name]
-        dataset_length= len(dataset)
-        predictors=dataset[used_predictors].astype('float64')
         [dataset_train,dataset_test]=split_data(predictors)
         (letters_in_use,_)=opt.curve_fit(fit_tm_model,dataset_train,dataset_train['T_m (K)'],(starting_guesses))
-        
-        # if statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)
-        # -dataset_test['T_m (K)']))/(number_of_runs)<(70/number_of_runs):
         parameters_from_runs[count,:]=letters_in_use
         train_avg_err.append(statistics.mean(np.absolute(fit_tm_model_err(dataset_train,letters_in_use)-dataset_train['T_m (K)'])))
         test_avg_err.append(statistics.mean(np.absolute(fit_tm_model_err(dataset_test,letters_in_use)-dataset_test['T_m (K)'])))
@@ -371,7 +368,7 @@ r'''
 r'''
 ## Abstract
 
-In this study, two different computational approaches were developed to predict the melting points of quinone and hydroquinone-based molecules. A traditional machine learning approach was used to calculate features with the Mordred molecular descriptor calculator and generate a model using a ridge regression. A more simple, scientifically developed model that utilizes volume-based thermodynamics to describe the enthalpy of fusion and previously published equations to capture the entropy of melting was also developed. Different functional forms of the enthalpy term were also tested and compared to the original physics-based model to confirm the underlying scientific understanding. The traditional machine learning model resulted in average absolute errors of ~30 C for the quinone test set and ~40 C for the hydroquinone test set. The physics-based model resulted in average absolute errors of ~50 for the quinone test set and < 40 C for the hydroquinone set. The machine learning model consistently outperformed the thermodynamic model for the quinone dataset, but the thermodynamic model surpassed the machine learning model for the hydroquinone dataset.
+In this study, two different computational approaches were developed to predict the melting points of quinone and hydroquinone-based molecules. A traditional machine learning approach was used to calculate features with the Mordred molecular descriptor calculator and generate a model using a ridge regression. A more simple, scientifically developed model that utilizes volume-based thermodynamics to describe the enthalpy of fusion and previously published equations to capture the entropy of melting was also developed. The traditional machine learning model resulted in average absolute errors of ~30 C for the quinone test set and ~40 C for the hydroquinone test set. The thermodynamics-based model resulted in average absolute errors of ~50 for the quinone test set and < 40 C for the hydroquinone set. __The features used for the thermodynamics-based ML model were also applied in a standard linear regression model, which had worse performance than the non-linear thermodynamics-based model, supporting the validity of the thermodynamics-based model.__ Applying the thermodynamics-based model to the combined quinone and hydroquinone dataset resulted in average absolute errors of approximately 41 C. The machine learning model consistently outperformed the thermodynamic model for the quinone dataset, but the thermodynamic model surpassed the machine learning model for the hydroquinone dataset.
 
 '''
 
@@ -380,13 +377,13 @@ In this study, two different computational approaches were developed to predict 
 r'''
 ## Introduction
 
-Quinone- and hydroquinone-based molecules have gathered attention recently as electrolyte candidate molecules for redox flow batteries, among other applications\cite{Shimizu2017,Kwabi2018,Goulet2019}. Our group has recently proposed using a eutectic mixture of benzoquinone-based molecules as a high energy density positive electrolyte for flow batteries that remains liquid at room temperature. In order to identify promising materials for this application, knowing the melting temperatures of the quinone and hydroquinone molecules is essential. With the model we have developed, the melting points of the pure component quinones and hydroquinones can be used to predict the melting point of a eutectic mixture. However, melting data is not available for all the quinones and hydroquinones of interest. To address this challenge, we developed a computational model that can be used to predict the melting points of quinone and hydroquinone molecules that are not available in literature. 
+Quinone- and hydroquinone-based molecules have gathered attention recently as electrolyte candidate molecules for redox flow batteries, among other applications\cite{Shimizu2017,Kwabi2018,Goulet2019} __add more citations from EEP's paper__. Our group has recently proposed using a eutectic mixture of benzoquinone-based and naphthoquinone-based molecules as a high energy density positive electrolyte for flow batteries that remains liquid at room temperature. In order to identify promising materials for this application, knowing the melting temperatures of the quinone and hydroquinone molecules is essential. With the model we have developed, the melting points of the pure component quinones and hydroquinones can be used to predict the melting point of a eutectic mixture. However, melting data is not available for all the quinones and hydroquinones of interest. To address this challenge, we developed a data-driven model that can be used to predict the melting points of quinone and hydroquinone molecules that are not available in literature. 
 
 Many melting point prediction models employ group contribution method (GCM). This is an additive method that works by summing the contributions from all the various groups in a molecule (hence "group contribution method"). However, this method does not account for interactions between groups \cite{JOBACK1987}.
 
 Our model utilizes simple molecular descriptors that can be calculated from the two-dimensional structure of the model from a semi-empirical model previously proposed by Dannenfelser and Yalkowsky\cite{DannenfelserEntropy}. The model also uses molecular volume data, which can be calculated using crystal structure data or density measurements, or predicted computationally\cite{Day2011}. The molecular volume data contains information about the strength of the interactions between molecules in the solid phase. This approach provides an advantage over GCM in that the molecular volume in the solid phase of a species inherently accounts for the interactions between molecules.
 
-We hypothesized that by grouping molecules that we expected to have similar scaling relationships for enthalpies of melting, we would be able to significantly reduce the number of features required to predict melting points of these molecules with an accuracy comparable to that of traditional machine learning approaches. 
+We hypothesized that by grouping molecules that we expected to have similar scaling relationships for enthalpies of melting, we would be able to significantly reduce the number of features required to predict melting points of these molecules with an accuracy comparable to that of traditional machine learning approaches.
 
 '''
 
@@ -397,7 +394,7 @@ r'''
 
 ### Machine Learning Model
 
-For the more traditional machine learning approach, we used the Mordred molecular descriptor calculator (available as a python package) to featurize our quinone and hydroquinone based molecules using just the chemical SMILES string as the input \cite{Moriwaki2018}. This generated approximately 1000 usable features for each molecule. After generating the features, they were then standardized so that each feature was a gaussian with zero mean and unit variance. The standardization was applied independently to the training set and test set. The standardized features were then used in a ridge regression ($\alpha=100$) to generate the melting point prediction model. The alpha parameter is used to adjust the balance between overfitting (giving more features higher weights) and underfitting (not capturing enough of the variation in the data using the features). The effect of alpha can be seen in the difference between the training set and test set errors (see the app the in SI to test out different values of alpha). 
+For the more traditional machine learning approach, we used the Mordred molecular descriptor calculator (available as a python package) to featurize our quinone and hydroquinone based molecules using just the chemical SMILES string as the input \cite{Moriwaki2018}. This generated approximately 1000 usable features for each molecule. After generating the features, they were then standardized so that each feature was a gaussian with zero mean and unit variance. The standardization was applied independently to the training set and test set. The standardized features were then used in a ridge regression ($\alpha$ = 100) to generate the melting point prediction model. The alpha parameter is used to adjust the balance between overfitting (giving more features higher weights) and underfitting (not capturing enough of the variation in the data using the features). The effect of alpha can be seen in the difference between the training set and test set errors (see the app the in SI to test out different values of alpha). 
 
 ### Thermodynamics-Based Model
 
@@ -436,7 +433,7 @@ In summary, we expect $a$ to be negative, $b$ to potentially vary depending on t
 
 #### Enthalpy of Melting
 
-For the enthalpy of melting, we use volume-based thermodynamics (VBT), a physics-based approach for simply predicting thermodynamic properties of compounds. Rather than adding contributions from all the side groups on the molecule, a single property, molecular volume, is used. For ionic compounds, interactions in the solid are primarily captured by the Coulomb energy, which scales with $r^{-1}$, which can be be re-written as $V_m^{-\frac{1}{3}}$, where $r$ is the distance between ions and $V_m$ is the molecular volume\cite{Glasser2005,Glasser2011}.
+For the enthalpy of melting, we use volume-based thermodynamics (VBT), a thermodynamics-based approach for simply predicting thermodynamic properties of compounds. Rather than adding contributions from all the side groups on the molecule, a single property, molecular volume, is used. For ionic compounds, interactions in the solid are primarily captured by the Coulomb energy, which scales with $r^{-1}$, which can be be re-written as $V_m^{-\frac{1}{3}}$, where $r$ is the distance between ions and $V_m$ is the molecular volume\cite{Glasser2005,Glasser2011}.
 
 We extend this understanding of interactions in the solid phase from ionic compounds to molecular solids. As Coulomb forces dominate ionic interactions, we expect dipole-dipole interactions to dominate intermolecular interactions for quinone and hydroquinone solids, due to the carbon-oxygen bonds. It can be derived from quantum mechanics that dipole-dipole interactions scale with distance as $r^{-3}$ or $V_m^{-1}$\cite{Berlin1952}. Similarly, Van der Waals (VdW) interactions scale with distance as $r^{-6}$ or $V_m^{-2}$\cite{Holstein2001}. We estimate that the lattice energy of our quinone and hydroquinone solids is well described by the dipole-dipole interaction.
 
@@ -451,7 +448,7 @@ $$
 Combining this with our equation for entropy of melting, we get the overall equation for melting point for hydrocarbons:
 
 $$
-    T_m=\frac{g V_m^{-2}+h}{a \textrm{ln}\sigma + b \tau + c \textrm{ln}\epsilon_{ar} + d \textrm{ln}\epsilon_{al} + f}
+    T_m=\frac{g' V_m^{-2}+h'}{a' \textrm{ln}\sigma + b' \tau + c' \textrm{ln}\epsilon_{ar} + d' \textrm{ln}\epsilon_{al} + f'}
 $$
 
 With a free constant in both the numerator and the denominator there are infinite possible solutions to the optimization problem. This makes the fitted parameters difficult to compare between different datasets (quinones, hydroquinones, and hydrocarbons) and different train-test splits of the same dataset. To mitigate this issue, we can normalize the equation by dividing numerator and denominator by one of the constants (this necessarily assumes that the parameter we normalize by is nonzero) - this method was used by Preiss et al \cite{Preiss2011}. Our model then becomes:
@@ -498,7 +495,7 @@ st.write(vbt_hc_dict['Parameters'])
 r'''
 Both the average absolute and root mean square errors for the hydrocarbon dataset were around 30 C or less for both the training set and test set, which is comparable to errors obtained for other melting point prediction models in literature (which did not use a test set) \cite{Preiss2011}.
 
-Our initial model for enthalpy of melting for the benzoquinone and hydroquinones was:
+Our initial model for enthalpy of melting for the benzoquinone and hydroquinones was (assuming dipole-dipole interactions):
 $$
 \Delta H_m=gV_m^{-1}+h
 $$
@@ -637,7 +634,7 @@ r'''
 We tested several different functional forms for the numerator based on molecular volume, but found that $g V_m^{-1}+h$ consistently yielded the lowest errors. We calculated both the average absolute error (which has been reported in other melting point prediction literature\cite{Preiss2011}) and the root mean square error, which is commonly used in machine learning approaches\cite{Nigsch2006}. Interestingly, we found that low errors were also obtained with just a constant fitted parameter for enthalpy in our $T_m$ numerator for the quinone dataset. The errors without including the $V_m^{-1}$ feature were similar for both average absolute error (AAE) and root mean square error (RMSE). The sign for the parameter in front of the $V_m$ term also changed with each shuffle of the training and test set for the quinone set, indicating that it was not a reliable predictor. This would imply that the intermolecular interactions in the solid phases of quinone molecules are not different enough to significantly affect the enthalpy of melting. We also observed that the coefficients for $\tau$ (for the quinones), and $\epsilon_{ar}$ and $\epsilon_{al}$ (for the hydroquinones) changed between splits of training and test sets. We suspected that this was due to the model attempting to compensate for the change in sign of the $V_m^{-1}$ coefficient. To test this, we removed the molecular volume term from the numerator and just used a fitted constant as a proxy for enthalpy:
 
 $$
-T_m = \frac{h}{a \textrm{ln}\sigma + b \tau + c \textrm{ln}\epsilon_{ar} + d \textrm{ln}\epsilon_{al}}
+T_m = \frac{h}{a \textrm{ln}\sigma + b \tau + c \textrm{ln}\epsilon_{ar} + d \textrm{ln}\epsilon_{al} + 1}
 $$
 
 For consistency, we also applied this further simplified model to the hydroquinone dataset.
@@ -690,9 +687,9 @@ st.write(vbt_hq_5p['Parameters'])
 #endregion
 
 r'''
-Removing the volume term from the numerator appears to somewhat improve the consistency of the sign for the fitted parameters. The sign of $b$ still changes between different test and trainint set splits for the quinone dataset, but the signs of $c$ and $d$ appear to stabilize to a negative value (as expected) for the hydroquinone dataset. This could indicate that $\tau$ is not a meaningful predictor of melting point for the quinone dataset
+Removing the volume term from the numerator appears to somewhat improve the consistency of the sign for the fitted parameters. The sign of $b$ still changes between different test and training set splits for the quinone dataset, but the signs of $c$ and $d$ appear to stabilize to a negative value (as expected) for the hydroquinone dataset. This could indicate that $\tau$ is not a meaningful predictor of melting point for the quinone dataset
 
-We also note that there appears to be a systematic underestimation of the melting points of the higher $T_m$ and an overestimate of the melting points of the lower $T_m$ molecules, or somewhat of a "flattening" effect. We attribute this systematic error to our model for enthalpy. By using all of the molecules in the dataset to generate one set of fitted parameters, we are effectively assuming that all molecules have the same types of intermolecular interactions. However, this is unlikely true, as the higher melting molecules most likely have stronger intermolecular interactions (perhaps hydrogen bonding), and thus should have higher enthalpies of melting. By combining different types of quinones molecules in this way, we are essentially taking an intermediate strength of intermolecular interaction and applying it to all the molecules in the dataset, which results in the over- and under- estimation that we see in our data. This was verified by analyzing the types of molecules on both ends of the spectrum to see if there were obvious reasons why the higher melting compounds might have stronger interactions and the lower melting compounds would have weaker interactions.
+We also note that there appears to be a systematic underestimation of the melting points of the higher $T_m$ and an overestimate of the melting points of the lower $T_m$ molecules, or somewhat of a "flattening" effect (which was also seen in the ML model). We attribute this systematic error to our model for enthalpy. By using all of the molecules in the dataset to generate one set of fitted parameters, we are effectively assuming that all molecules have the same types of intermolecular interactions. However, this is unlikely true, as the higher melting molecules most likely have stronger intermolecular interactions (perhaps hydrogen bonding), and thus should have higher enthalpies of melting. By combining different types of quinones molecules in this way, we are essentially taking an intermediate strength of intermolecular interaction and applying it to all the molecules in the dataset, which results in the over- and under- estimation that we see in our data. This was verified by analyzing the types of molecules on both ends of the spectrum to see if there were obvious reasons why the higher melting compounds might have stronger interactions and the lower melting compounds would have weaker interactions.
 
 Upon observing the difficulties in maintaining a consistent sign for the eccentricity parameters, which we suspected was due to the relative unimportance of it and the small dataset, we decided to combine both the quinone and hydroquinone datasets into a single dataset and fit a model to this larger dataset (~200 molecules). 
 
@@ -782,6 +779,8 @@ Melting point prediction is an immensely challenging problem that has yet to be 
 r'''
 ## Experimental
 
+Five different datasets are used in this work. First, a hydrocarbon dataset collected by Lian et al is used to examine the validity of the thermodynamics-based model. The second and third are the ML-based quinone and hydroquinone datasets, respectively. These were downloaded from Reaxys, an organic molecule database, by searching for compounds with a quinone substructure. Only melting point was required for this database, which is why many more compounds are present. The fourth and fifth datasets are the thermodynamics-based quinone and hydroquinone datasets, respectively. These were compiled manually, by searching for compounds that had both melting point and molecular volume (either crystallographic or density) data available for the coumpound. Molecular volume data was found to be the limiting factor, leading to the much smaller size of these datasets. The datasets are described in more detail below.
+
 ### Machine Learning Model
 
 All of the data for this method was downloaded from the Reaxys database online (reaxys.com). For each of the quinone and hydroquinone datasets, a substructure search was performed with a structure editor query (benzoquinone example shown below in Figure \cite{bq_reaxys_search}). We limited our search to compounds with a molecular weight of less than 216 g/mol for the quinone-based molecules and 204 g/mol for the hydroquinone-based molecules. We then filtered the data by compounds which had melting points available from literature, and downloaded them using Reaxys's download feature.
@@ -831,5 +830,5 @@ All data and code used in our analysis can be viewed in our repository (URL: XX)
     # Figure out how to properly cite python libraries
     # See if there's a good citation package for python
     # Compare other models that would be physically relevant
-    # k means clustering in the physics-based data
+    # k means clustering in the thermodynamics-based data
     # 
