@@ -557,7 +557,7 @@ with col2:
         pd.Series(ml_hq_dict['RMSE']).to_csv('Data Files/ML_HQ_RMSE.csv',index=False)
         ml_hq_dict['Model Coefficients'].to_csv('Data Files/ML_HQ_Coefficients.csv',index=False)
     else:
-        ml_hq_plot = Image.open('Plots/ML_HQ_Plot.png')
+        ml_hq_plot = Image.open('Plots/ML_HQ_plot.png')
         ml_hq_dict = {'RMSE': pd.read_csv('Data Files/ML_HQ_RMSE.csv',squeeze=True),'AAE': pd.read_csv('Data Files/ML_HQ_AAE.csv',squeeze=True),'Model Coefficients': pd.read_csv('Data Files/ML_HQ_Coefficients.csv')}
         st.image(ml_hq_plot,use_column_width=True)
 
