@@ -16,7 +16,7 @@ from mordred import Calculator, descriptors
 from sklearn import preprocessing
 from sklearn.linear_model import Ridge
 from matplotlib import gridspec
-from pillow import Image
+from PIL import Image
 import scipy.stats as stt
 
 
