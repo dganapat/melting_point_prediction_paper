@@ -368,7 +368,7 @@ r'''
 r'''
 ## Abstract
 
-In this study, two different computational approaches were developed to predict the melting points of quinone and hydroquinone-based molecules. A traditional machine learning approach was used to calculate features with the Mordred molecular descriptor calculator and train a ridge regression machine learning model. A more simple model that utilizes volume-based thermodynamics to describe the enthalpy of fusion and previously published equations to capture the entropy of melting was also developed. The traditional machine learning model resulted in test set average absolute errors of ~30 C for the quinone test set and ~40 C for the hydroquinone test set. The thermodynamics-based model resulted in average absolute errors of ~40 for the quinone test set and ~30-35 C for the hydroquinone set. The features used for the thermodynamics-based ML model were also applied in a standard ridge regression model, which performed similarly to the functionalized forms of the thermodynamics-based models, indicating that it is the thermodynamic features themselves that are more important as opposed to the precise functional form of the model. Applying the thermodynamics-based model to the combined quinone and hydroquinone dataset resulted in average absolute errors of ~41 C. The machine learning model consistently outperformed the thermodynamic model for the quinone dataset, but the thermodynamic model surpassed the machine learning model for the hydroquinone dataset.
+In this study, two different approaches were investigated to predict the melting points of quinone and hydroquinone-based molecules. A traditional machine learning approach was used to calculate features with the Mordred molecular descriptor calculator and train a ridge regression machine learning model. A simpler model that utilizes volume-based thermodynamics to describe the enthalpy of fusion and previously published equations to capture the entropy of melting was also developed. The traditional machine learning model resulted in test set average absolute errors of ~30 C for the quinone test set and ~40 C for the hydroquinone test set. The thermodynamics-based model resulted in average absolute errors of ~40 for the quinone test set and ~30-35 C for the hydroquinone set. The features used for the thermodynamics-based ML model were also applied in a standard ridge regression model, which performed similarly to the functionalized forms of the thermodynamics-based models, indicating that it is the thermodynamic features themselves that are more important as opposed to the precise functional form of the model. Applying the thermodynamics-based model to the combined quinone and hydroquinone dataset resulted in average absolute errors of ~41 C. The machine learning model consistently outperformed the thermodynamic model for the quinone dataset, but the thermodynamic model surpassed the machine learning model for the hydroquinone dataset. In this study, we also publish four novel datasets for quinone and hydroquinone melting points and other key features.
 
 '''
 
@@ -377,11 +377,9 @@ In this study, two different computational approaches were developed to predict 
 r'''
 ## Introduction
 
-Quinone- and hydroquinone-based molecules have gathered attention recently as electrolyte candidate molecules for redox flow batteries, among other applications\cite{Shimizu2017,Kwabi2018,Goulet2019} __add more citations from EEP's paper__. Our group has recently proposed using a eutectic mixture of benzoquinone-based and naphthoquinone-based molecules as a high energy density positive electrolyte for flow batteries that remains liquid at room temperature. In order to identify promising materials for this application, knowing the melting temperatures of the quinone and hydroquinone molecules is essential. With the model from (Antonio's paper), the melting points of the pure component quinones and hydroquinones can be used to predict the melting point of a eutectic mixture. However, melting data is not always available for all the quinones and hydroquinones of interest. To address this challenge, we seek to develop a data-driven model that can be used to predict the melting points of quinone and hydroquinone molecules that are not available in literature. 
+Quinone- and hydroquinone-based molecules have gathered attention recently as electrolyte candidate molecules for redox flow batteries, among other applications\cite{Shimizu2017,Kwabi2018,Goulet2019} __add more citations from EEP's paper__. Our group has recently proposed using a eutectic mixture of benzoquinone-based and naphthoquinone-based molecules as a high energy density positive electrolyte for flow batteries that remains liquid at room temperature __cite EEP's paper__. In order to identify promising materials for this application, knowing the melting temperatures of the quinone and hydroquinone molecules is essential. With the model from (Antonio's paper), the melting points of the pure component quinones and hydroquinones can be used to predict the melting point of a eutectic mixture. However, melting data is not always available for all the quinones and hydroquinones of interest. To address this challenge, we seek to develop a computational model that can be used to predict the melting points of quinone and hydroquinone molecules that are not available in literature. 
 
-Many melting point prediction models employ group contribution method (GCM). This is an additive method that works by summing the contributions from all the various groups in a molecule (hence "group contribution method"). However, this method does not account for interactions between groups \cite{JOBACK1987}.
-
-Our model utilizes simple molecular descriptors that can be calculated from the two-dimensional structure of the model from a semi-empirical model previously proposed by Dannenfelser and Yalkowsky\cite{DannenfelserEntropy}. The model also uses molecular volume data, which can be calculated using crystal structure data or density measurements, or predicted computationally\cite{Day2011}. The molecular volume data contains information about the strength of the interactions between molecules in the solid phase. This approach provides an advantage over GCM in that the molecular volume in the solid phase of a species inherently accounts for the interactions between molecules.
+Many melting point prediction models employ group contribution method (GCM). This is an additive method that works by summing the contributions from all the various groups in a molecule (hence "group contribution method"). However, this method does not account for interactions between groups \cite{JOBACK1987}. Our model utilizes simple molecular descriptors that can be calculated from the two-dimensional structure of the model from a semi-empirical model previously proposed by Dannenfelser and Yalkowsky\cite{DannenfelserEntropy}. The model also uses molecular volume data, which can be calculated using crystal structure data or density measurements, or predicted computationally\cite{Day2011}. The molecular volume data is presumed to contain information about the strength of the interactions between molecules in the solid phase, and can be used as a proxy for the enthalpy of the solid phase. This approach provides an advantage over GCM in that the molecular volume in the solid phase of a species inherently accounts for the interactions between molecules.
 
 We hypothesized that by grouping molecules that we expected to have similar scaling relationships for enthalpies of melting, we would be able to significantly reduce the number of features required to predict melting points of these molecules with an accuracy comparable to that of traditional machine learning approaches.
 
@@ -407,7 +405,7 @@ From here, we sought to find equations that would describe the enthalpy and entr
 
 #### Entropy of Melting
 
-We use the equation developed by Dannenfelser and Yalkowsky\cite{DannenfelserEntropy} to estimate the entropy of melting:
+We use the equation developed by [Dannenfelser and Yalkowsky](https://doi.org/10.1021/ie940581z) to estimate the entropy of melting:
 $$
 \Delta S_m= a \textrm{ln}\sigma + b \tau + c
 $$
@@ -415,7 +413,7 @@ where $a,b,$ and $c$ are adjustable parameters to be fit with a non-linear least
 
 The first descriptor $\sigma$, which is the molecular symmetry number, is the number of unique rotations that can be performed on the molecule and return an indistinguishable orientation, in addition to the identity. At minimum, $\sigma$ must be 1. As sigma increases, the number of microstates (orientations of the molecule) that produce the same crystal structure increases, thus increasing the overall entropy of the solid (according to the Boltzmann equation, $\Delta S = k_B ln\Omega$. This results in a lower entropy of melting (difference between the entropy of the solid and liquid phases decreases).
 
-The second descriptor, $\tau$, is the number of torsional angles in the molecule and can be calculated using the formula\cite{DannenfelserEntropy}:
+The second descriptor, $\tau$, is the number of torsional angles in the molecule and can be calculated using the [formula](https://doi.org/10.1021/ie940581z):
 
 $$
 \tau = \textrm{SP3} + 0.5(\textrm{SP2}+\textrm{RING}) - 1
@@ -423,7 +421,7 @@ $$
 
 Here, SP3 is the number of $\textrm{sp}^3$ chain atoms (not including end carbons), SP2 is the number of $\textrm{sp}^2$ chain atoms (also not including end carbons), and RING is the number of fused-ring systems. As the effect of tau on the entropies of the solid and liquid phases varies depending on the class of molecules, it is difficult to say whether it increases or decreases the entropy of melting in general.
 
-This model was updated by Lian and Yalkowsky to include two more descriptors for entropy of melting in the Unified Physiochemical Property Estimation Relationships (UPPER) method \cite{LianUPPER2013}. These additional descriptors are 1) aromatic eccentricity - the number of atoms in aromatic rings, and 2) aliphatic eccentricity - the number of atoms in aliphatic (non-aromatic) rings. These terms capture the tendency of flat or elongated molecules to be partially ordered in the liquid (which decreases the change in entropy between the solid and liquid phase, thus decreasing the entropy of melting). Thus, the final form of the equation we used to model the entropy of melting was:
+This model was updated by Lian and Yalkowsky to include two more descriptors for entropy of melting in the [Unified Physiochemical Property Estimation Relationships (UPPER) method](https://doi.org/10.1002/jps.24033). These additional descriptors are 1) aromatic eccentricity - the number of atoms in aromatic rings, and 2) aliphatic eccentricity - the number of atoms in aliphatic (non-aromatic) rings. These terms capture the tendency of flat or elongated molecules to be partially ordered in the liquid (which decreases the change in entropy between the solid and liquid phase, thus decreasing the entropy of melting). Thus, the final form of the equation we used to model the entropy of melting was:
 
 $$
     \Delta S_m= a \textrm{ln}\sigma + b \tau + c \textrm{ln}\epsilon_{ar} + d \textrm{ln}\epsilon_{al} + f
@@ -513,65 +511,8 @@ Where we have normalized the constant in the denominator for reasons discussed a
 
 r'''
 ## Results and Discussion
-
-### Machine Learning Model
 '''
 
-# ML Plots
-#region
-
-col1,col2 = st.columns(2)
-# Quinone ML Plot
-
-with col1:
-    alpha_bq=st.slider('Quinone Ridge Regression alpha (click Generate New Plot after setting)',min_value=0,max_value=200,value=100)
-
-    if st.button('Generate New Quinone ML Plot'):
-        ml_bq_dict=ml_model(ml_dataset_dict,'Quinones',alpha_bq,False)
-
-        ml_bq_dict['Plot'].savefig('Plots/ML_BQ_plot.png',dpi=300)
-        st.write(ml_bq_dict['Plot'])
-
-        pd.Series(ml_bq_dict['AAE']).to_csv('Data Files/ML_BQ_AAE.csv',index=False)
-        pd.Series(ml_bq_dict['RMSE']).to_csv('Data Files/ML_BQ_RMSE.csv',index=False)
-        ml_bq_dict['Model Coefficients'].to_csv('Data Files/ML_BQ_Coefficients.csv',index=False)
-    else:
-        ml_bq_plot=Image.open('Plots/ML_BQ_plot.png')
-        ml_bq_dict = {'RMSE': pd.read_csv('Data Files/ML_BQ_RMSE.csv',squeeze=True),'AAE': pd.read_csv('Data Files/ML_BQ_AAE.csv',squeeze=True),'Plot': ml_bq_plot,'Model Coefficients': pd.read_csv('Data Files/ML_BQ_Coefficients.csv')}
-        
-        st.image(ml_bq_dict['Plot'],use_column_width=True)
-
-    st.markdown('''ML model for quinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`.'''.format(ml_bq_dict['AAE'][1],ml_bq_dict['AAE'][0],ml_bq_dict['RMSE'][1],ml_bq_dict['RMSE'][0]) )
-    st.write(ml_bq_dict['Model Coefficients'].sort_values(by='w_abs',ascending=False).head(20))
-
-
-# Hydroquinone ML Plot
-with col2:
-    alpha_hq=st.slider('Hydroquinone Ridge Regression alpha (click Generate New Plot after setting)',min_value=0,max_value=200,value=100)
-
-    if st.button('Generate New Hydroquinone ML Plot'):
-        ml_hq_dict=ml_model(ml_dataset_dict,'Hydroquinones',alpha_hq,False)
-        ml_hq_dict['Plot'].savefig('Plots/ML_HQ_plot.png',dpi=300)
-        st.write(ml_hq_dict['Plot'])
-        pd.Series(ml_hq_dict['AAE']).to_csv('Data Files/ML_HQ_AAE.csv',index=False)
-        pd.Series(ml_hq_dict['RMSE']).to_csv('Data Files/ML_HQ_RMSE.csv',index=False)
-        ml_hq_dict['Model Coefficients'].to_csv('Data Files/ML_HQ_Coefficients.csv',index=False)
-    else:
-        ml_hq_plot = Image.open('Plots/ML_HQ_plot.png')
-        ml_hq_dict = {'RMSE': pd.read_csv('Data Files/ML_HQ_RMSE.csv',squeeze=True),'AAE': pd.read_csv('Data Files/ML_HQ_AAE.csv',squeeze=True),'Model Coefficients': pd.read_csv('Data Files/ML_HQ_Coefficients.csv')}
-        st.image(ml_hq_plot,use_column_width=True)
-
-    st.markdown('''ML model for hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`.'''.format(ml_hq_dict['AAE'][1],ml_hq_dict['AAE'][0],ml_hq_dict['RMSE'][1],ml_hq_dict['RMSE'][0]) )
-    st.write(ml_hq_dict['Model Coefficients'].sort_values(by='w_abs',ascending=False).head(20))
-
-#endregion
-
-r'''
-Both quinone and hydroquinone datasets were modeled using a default alpha value of 100. With repeated re-shuffling of the training and test sets, we find that the quinone ML both qualitatively and quantitatively has higher predictive power than the hydroquinone ML model. The quinone dataset average absolute errors are consistently less than 30 C for both the training and test sets, while for the hydroquinone dataset they are usually between 35-40 C. Visually, we also see that the quinone dataset follows the perfect prediction (dashed) trend line. On the other hand, the hydroquinone models appears skewed, such that the melting points of the lower $T_m$ molecules are overpredicted and those of the higher $T_m$ molecules are underpredicted. It appears that melting point has some dependence that is not as well-captured by the Mordred-generated features for the hydroquinones as it is for the quinones. As the molecular features are generated based just on the SMILES string of the molecule, it is difficult to imagine that complexities such intermolecular interactions (which we would expect to be higher for hydroquinones than quinones due to hydrogen bonding) are well-described by these calculated features. 
-
-Both models are highly susceptible to overfitting, as we can see by decreasing alpha. A value of alpha = 0 corresponds to a simple linear regression - there is no penalty for having more features with higher weights (parameters) included in the model. When we do lower alpha to 0, we see that the training set errors (both AAE and RMSE) drop to less than 20 C for the quinones and less than 50 C for the hydroquinones. However, the test set errors explode, with RMSEs above 1000 C for the quinones and 10^14 C for the hydroquinones. Again the model is noticeably worse for the hydroquinones.
-
-'''
 
 r'''
 ### Thermodynamics-Based Model
@@ -740,6 +681,67 @@ st.write(vbt_bqhq_dict['Parameters'])
 r'''
 The thermodynamics-based model applied to the combined quinone and hydroquinone dataset has higher errors than the both separate quinone and hydroquinone models. This shows that there is value in keeping the models separate. We would expect the strength of the intermolecular interactions between quinone molecules to differ from those of hydroquinones, and these relationships to be reflected in the model parameters. Applying the same model to both datasets appears to result in an "averaging" of these interactions, leading to worse melting point predictions for both, supporting the hypothesis that the strength of the intermolecular interactions varies between quinones and hydroquinones.
 '''
+r'''
+### Machine Learning Models
+
+#### ML Model using Mordred Features
+'''
+
+# ML Plots
+#region
+
+col1,col2 = st.columns(2)
+# Quinone ML Plot
+
+with col1:
+    alpha_bq=st.slider('Quinone Ridge Regression alpha (click Generate New Plot after setting)',min_value=0,max_value=200,value=100)
+
+    if st.button('Generate New Quinone ML Plot'):
+        ml_bq_dict=ml_model(ml_dataset_dict,'Quinones',alpha_bq,False)
+
+        ml_bq_dict['Plot'].savefig('Plots/ML_BQ_plot.png',dpi=300)
+        st.write(ml_bq_dict['Plot'])
+
+        pd.Series(ml_bq_dict['AAE']).to_csv('Data Files/ML_BQ_AAE.csv',index=False)
+        pd.Series(ml_bq_dict['RMSE']).to_csv('Data Files/ML_BQ_RMSE.csv',index=False)
+        ml_bq_dict['Model Coefficients'].to_csv('Data Files/ML_BQ_Coefficients.csv',index=False)
+    else:
+        ml_bq_plot=Image.open('Plots/ML_BQ_plot.png')
+        ml_bq_dict = {'RMSE': pd.read_csv('Data Files/ML_BQ_RMSE.csv',squeeze=True),'AAE': pd.read_csv('Data Files/ML_BQ_AAE.csv',squeeze=True),'Plot': ml_bq_plot,'Model Coefficients': pd.read_csv('Data Files/ML_BQ_Coefficients.csv')}
+        
+        st.image(ml_bq_dict['Plot'],use_column_width=True)
+
+    st.markdown('''ML model for quinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`.'''.format(ml_bq_dict['AAE'][1],ml_bq_dict['AAE'][0],ml_bq_dict['RMSE'][1],ml_bq_dict['RMSE'][0]) )
+    st.write(ml_bq_dict['Model Coefficients'].sort_values(by='w_abs',ascending=False).head(20))
+
+
+# Hydroquinone ML Plot
+with col2:
+    alpha_hq=st.slider('Hydroquinone Ridge Regression alpha (click Generate New Plot after setting)',min_value=0,max_value=200,value=100)
+
+    if st.button('Generate New Hydroquinone ML Plot'):
+        ml_hq_dict=ml_model(ml_dataset_dict,'Hydroquinones',alpha_hq,False)
+        ml_hq_dict['Plot'].savefig('Plots/ML_HQ_plot.png',dpi=300)
+        st.write(ml_hq_dict['Plot'])
+        pd.Series(ml_hq_dict['AAE']).to_csv('Data Files/ML_HQ_AAE.csv',index=False)
+        pd.Series(ml_hq_dict['RMSE']).to_csv('Data Files/ML_HQ_RMSE.csv',index=False)
+        ml_hq_dict['Model Coefficients'].to_csv('Data Files/ML_HQ_Coefficients.csv',index=False)
+    else:
+        ml_hq_plot = Image.open('Plots/ML_HQ_plot.png')
+        ml_hq_dict = {'RMSE': pd.read_csv('Data Files/ML_HQ_RMSE.csv',squeeze=True),'AAE': pd.read_csv('Data Files/ML_HQ_AAE.csv',squeeze=True),'Model Coefficients': pd.read_csv('Data Files/ML_HQ_Coefficients.csv')}
+        st.image(ml_hq_plot,use_column_width=True)
+
+    st.markdown('''ML model for hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`.'''.format(ml_hq_dict['AAE'][1],ml_hq_dict['AAE'][0],ml_hq_dict['RMSE'][1],ml_hq_dict['RMSE'][0]) )
+    st.write(ml_hq_dict['Model Coefficients'].sort_values(by='w_abs',ascending=False).head(20))
+
+#endregion
+
+r'''
+Both quinone and hydroquinone datasets were modeled using a default alpha value of 100. With repeated re-shuffling of the training and test sets, we find that the quinone ML both qualitatively and quantitatively has higher predictive power than the hydroquinone ML model. The quinone dataset average absolute errors are consistently less than 30 C for both the training and test sets, while for the hydroquinone dataset they are usually between 35-40 C. Visually, we also see that the quinone dataset follows the perfect prediction (dashed) trend line. On the other hand, the hydroquinone models appears skewed, such that the melting points of the lower $T_m$ molecules are overpredicted and those of the higher $T_m$ molecules are underpredicted. It appears that melting point has some dependence that is not as well-captured by the Mordred-generated features for the hydroquinones as it is for the quinones. As the molecular features are generated based just on the SMILES string of the molecule, it is difficult to imagine that complexities such intermolecular interactions (which we would expect to be higher for hydroquinones than quinones due to hydrogen bonding) are well-described by these calculated features. 
+
+Both models are highly susceptible to overfitting, as we can see by decreasing alpha. A value of alpha = 0 corresponds to a simple linear regression - there is no penalty for having more features with higher weights (parameters) included in the model. When we do lower alpha to 0, we see that the training set errors (both AAE and RMSE) drop to less than 20 C for the quinones and less than 50 C for the hydroquinones. However, the test set errors explode, with RMSEs above 1000 C for the quinones and 10^14 C for the hydroquinones. Again the model is noticeably worse for the hydroquinones.
+
+'''
 
 r'''
 #### Ridge Regression Model using Thermodynamic Features
@@ -837,7 +839,9 @@ We wrote a script that allowed us to specify any functional form of the model th
 r'''
 ## Acknowledgements
 
-This work was supported in part by ExxonMobil and the National Science Foundation. This analysis would not have been possible without the creators of the following python packages: Streamlit, pandas, numpy, matplotlib, scipy, statistics, sklearn, rdkit, and mordred. Building our ML datasets was made possible using the Reaxys database. Acquiring crystal structures for most of the compounds in our datasets was made significantly helped by the CCDC. 
+This work was supported in part by ExxonMobil and the National Science Foundation. This analysis would not have been possible without the creators of the following python packages: Streamlit, pandas, numpy, matplotlib, scipy, statistics, sklearn, rdkit, and mordred. Building our ML datasets was made possible using the Reaxys database. Acquiring crystal structures for most of the compounds in our datasets was made significantly helped by the CCDC.
+
+AIonics - Austin
 '''
 
 r'''
@@ -849,7 +853,7 @@ To be added in Overleaf
 r'''
 ## Supplementary Information
 
-All data and code used in our analysis can be viewed in our repository (URL: XX) - readers can test different model forms by downloading the repository and changing the model form for the desired dataset in the mp_prediction_paper.py script. If viewing this paper in our Streamlit app, readers have the option to re-shuffle the training and test sets and view the results by clicking "Generate New Plot" for the relevant dataset and model type (but will not be able to test different model forms). The displayed errors and parameter values will automatically update as well.
+All data and code used in our analysis can be viewed in our repository (URL: https://github.com/dganapat/melting_point_prediction_paper) - readers can test different model forms by downloading the repository and changing the model form for the desired dataset in the mp_prediction_paper.py script. The interactive version of this paper can be viewed at https://dganapat-melting-point-prediction-pa-mp-prediction-paper-00ju76.streamlitapp.com/. If viewing this paper in our Streamlit app, readers have the option to re-shuffle the training and test sets and view the results by clicking "Generate New Plot" for the relevant dataset and model type (but will not be able to test different model forms). The displayed errors and parameter values will automatically update as well.
 '''
 # How to put code in markdown using python formatting
     # '''
@@ -859,6 +863,34 @@ All data and code used in our analysis can be viewed in our repository (URL: XX)
     # ```
     # '''
 
+# Will 20220715
+# Paper is not to show off the ML
+# It's to compare different approaches
+# Compare the methods with a table and 
+# Don't need to be selling anything
+# Conclusion could be that the physics model was expected to be more powerful, but because it's only empirical, maybe
+# Try employing the features from the phenomelogical models into the ML model
+# Flavor is very different - not showcasing the model - it's more of a systematic comparison
+# Need to confirm that we're making fair comparisons
+# Need to be careful because we have different datasets
+# Graphically depict the different models and what features are going into which models
+# In order to expand the dataset, we now rely on a different set of inputs
+# Landscape figure like figure 1 to define the data analysis problem. Make a flow chart of the inputs and outputs and defines what datasets are being used
+# In architecting the figure I might figure out what I missed
+# Rationalize the high value features in the ML ridge regression mordred features
+# Graphical plot to show the weights
+# Start with the thermodynamic model, then compare to ML model
+# Brandi's paper with Evan Reed is pretty similar (2021) screning through a large number of cathodes and optimizing for 3/4 parameters - tSNE plot that shows correlation
+# Recurring theme for my work: what is the right amount of physics - at what point are we including too much physics?
+# Refer to Emily and Antonio's papers on ArXiv
+# Sharing this is an example of good ML work
+# Play with the order of the presentation of the models
+# If the ML model is unbeatable, you want to put it at the end
+# want the systematic-ness to be more appreciated and draw a conclusion from the relative 
+# Look at Dean's 4D stem analysis paper where he rigorously compares different models
+# Discuss with Eder or Brandi if there are typical homes for these kinds of papers
+# It's not electrochemistry or materials so not sure where to publish - maybe PCCP or look at the papers I'm citing and see where they're published
+# Make one or 2 slides at the end of the thesis talk to refer to data driven work in different contexts
 
 # To do:
     # Figure out if there's something wrong with hydroquinone data
