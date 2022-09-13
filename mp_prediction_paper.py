@@ -260,8 +260,8 @@ def ml_model(ml_dataset_dict, dataset_key, alpha=100, do_featurization = False):
         theaxis.set_xlim(lims)
         theaxis.set_ylim(lims)
 
-        theaxis.set_xlabel(r"mp data ($^{\circ}$C)")
-        theaxis.set_ylabel("mp predicted ($^{\circ}$C)")
+        theaxis.set_xlabel(r"Experimental $T_m$ ($^{\circ}$C)")
+        theaxis.set_ylabel(r"Predicted $T_m$ ($^{\circ}$C)")
         
         for item in ([theaxis.xaxis.label, theaxis.yaxis.label, theaxis.yaxis.get_offset_text(), theaxis.xaxis.get_offset_text()]):
             item.set_fontsize(12)
@@ -314,8 +314,8 @@ def ml_model_vbt_features(vbt_dataset_dict,dataset_key,alpha=100):
         theaxis.set_aspect(1)
         theaxis.set_xlim(lims)
         theaxis.set_ylim(lims)
-        theaxis.set_xlabel(r"mp data ($^{\circ}$C)")
-        theaxis.set_ylabel("mp predicted ($^{\circ}$C)")
+        theaxis.set_xlabel(r"Experimental $T_m$ ($^{\circ}$C)")
+        theaxis.set_ylabel(r"Predicted $T_m$ ($^{\circ}$C)")
         
         for item in ([theaxis.xaxis.label, theaxis.yaxis.label, theaxis.yaxis.get_offset_text(), theaxis.xaxis.get_offset_text()]):
             item.set_fontsize(12)
@@ -371,7 +371,7 @@ r'''
 In this study, two different approaches were investigated to predict the melting points of quinone and hydroquinone-based molecules. In the first approach, molecular features were calculated with the Mordred molecular descriptor calculator and used to train a ridge regression machine learning model. In the second, a simpler featurization that captures key enthalpic and entropic features was applied in three model variants - two phenomelogical models and a ridge regression model. The traditional machine learning model resulted in test set average absolute errors of 27.5 C for the quinone test set and 39.4 C for the hydroquinone test set. The thermodynamics-based features resulted in average absolute errors of ~40 for the quinone test set and ~35 C for the hydroquinone set in the phenomelogical models. The thermodynamic features in the ridge regression model resulted in errors of 43.8C for the quinone test set and 31.3C for the hydroquinone test set. The Mordred-calculated features in the ridge regression model consistently outperformed the thermodynamic features across all models for the quinone dataset, but the thermodynamic features resulted in lower prediction errors for the hydroquinone dataset. These results emphasize that the features used to predict molecular properties are more relevant than the model itself. As a byproduct of this study, we also publish four new datasets for quinone and hydroquinone melting points and other key features.
 '''
 
-summary_fig = Image.open("Plots/Graphical Abstract 20220831.png")
+summary_fig = Image.open("Plots/Graphical Abstract 20220901.png")
 st.image(summary_fig)
 
 # Introduction
@@ -449,7 +449,9 @@ $$
 \Delta H_m=gV_m^{-1}+h
 $$
 
-Resulting in an overall equation of:
+In this formulation, we expect g to be negative as it is associated with the solid phase, or the "initial" state, and $\Delta H_m = H_{liquid} - H_{solid}$. Therefore, we expect $h$ to be positive to maintain a positive enthalpy of melting.
+
+This results in an overall equation of:
 $$
 T_m=\frac{g'V_m^{-1}+h'}{a'\textrm{ln}\sigma + b'\tau + c'\textrm{ln}\epsilon_{ar} + d'\textrm{ln}\epsilon_{al} + f}
 $$
@@ -460,7 +462,6 @@ $$
 T_m=\frac{gV_m^{-1}+h}{a\textrm{ln}\sigma + b\tau + c\textrm{ln}\epsilon_{ar} + d\textrm{ln}\epsilon_{al} + 1}
 $$
 
-In this formulation, we expect g to be negative as it is associated with the solid phase, or the "initial" state, and $\Delta H_m = H_{liquid} - H_{solid}$. Therefore, we expect $h$ to be positive to maintain a positive enthalpy of melting.
 '''
 # Results and Discussion
 
@@ -470,10 +471,11 @@ r'''
 
 
 r'''
-### Thermodynamics-Based Model
-#### With Molecular Volume Feature
+### Thermodynamics-Based Models
+#### With Molecular Volume $V_m$
 The quinone and hydroquinone datasets were initially fitted to the model independently (thus generating different values for a, b, c,...) to reflect the assumption that the strength of the dipole-dipole interaction varies between quinones and hydroquinones. This assumption is evaluated and discussed later in the paper by combining them into one dataset and fitting together to generate one model.
 
+We did not observe a significant difference between the test set and training set errors for the thermodynamics-based models - they were almost always within 10 C of each other (in fact, the test set error was sometimes lower than the training set error), indicating that overfitting is not an issue with this model and dataset. Therefore we did not incorporate an overfitting "penalty" similar to the alpha parameter in the machine learning model - the mathematics of incorporating this penalty become far more complicated with non-linear models.
 '''
 # Quinone + Hydroquinone VBT Plots
 #region
@@ -535,8 +537,12 @@ with col2:
 #endregion
 
 r'''
-#### Without Molecular Volume Feature
-We tested several different functional forms for the numerator based on molecular volume, but found that $g V_m^{-1}+h$ consistently yielded the lowest errors. We calculated both the average absolute error (which has been reported in other melting point prediction literature\cite{Preiss2011}) and the root mean square error, which is commonly used in machine learning approaches\cite{Nigsch2006}. Interestingly, we found that low errors were also obtained with just a constant fitted parameter for enthalpy in our $T_m$ numerator for the quinone dataset. The errors without including the $V_m^{-1}$ feature were similar for both average absolute error (AAE) and root mean square error (RMSE). The sign for the parameter in front of the $V_m$ term also changed with each shuffle of the training and test set for the quinone set, indicating that it was not a reliable predictor, at least for the quinone dataset. This would imply that the intermolecular interactions in the solid phases of quinone molecules are not different enough to significantly affect the enthalpy of melting. We also observed that the coefficients for $\tau$ (for the quinones), and $\epsilon_{ar}$ and $\epsilon_{al}$ (for the hydroquinones) changed between splits of training and test sets. We suspected that this was due to the model attempting to compensate for the change in sign of the $V_m^{-1}$ coefficient. To test this, we removed the molecular volume term from the numerator and just used a fitted constant as a proxy for enthalpy:
+The quinone coefficients generally have the signs expected from the previous discussion, with the exception of $g$. The confidence interval is very large, indicating that the $V_m$ feature is not very predictive of $T_m$ for the quinone dataset. The hydroquinone coefficients also generally have the signs expected, except for $d$, which could indicate that there is not enough spread in the aliphatic eccentricity of molecules available in the dataset, giving rise to model bias. Otherwise, the effect of aliphatic eccentrity on the entropy of melting lowers the entropy of the solid phase than it lowers the entropy of the liquid phase for the hydroquinones. We also see a larger magnitude for the values of $g$ for the hydroquinone dataset, which indicates stronger dipole-dipole interactions in the hydroquinone dataset, as expected.
+'''
+
+r'''
+#### Without Molecular Volume $V_m$
+We tested several different functional forms for the numerator based on molecular volume, but found that $g V_m^{-1}+h$ generally yielded the lowest errors. We calculated both the average absolute error (which has been reported in other melting point prediction literature\cite{Preiss2011}) and the root mean square error, which is commonly used in machine learning approaches\cite{Nigsch2006}. Interestingly, we found that low errors were also obtained with just a constant fitted parameter for enthalpy in our $T_m$ numerator for the quinone dataset. The errors without including the $V_m^{-1}$ feature were similar for both average absolute error (AAE) and root mean square error (RMSE). The sign for the parameter in front of the $V_m$ term also changed with each shuffle of the training and test set for the quinone set, indicating that it was not a reliable predictor, at least for the quinone dataset. This would imply that the intermolecular interactions in the solid phases of quinone molecules are not different enough to significantly affect the enthalpy of melting. We also observed that the coefficients for $\tau$ (for the quinones), and $\epsilon_{ar}$ and $\epsilon_{al}$ (for the hydroquinones) changed between splits of training and test sets. We suspected that this was due to the model attempting to compensate for the change in sign of the $V_m^{-1}$ coefficient. To test this, we removed the molecular volume term from the numerator and just used a fitted constant as a proxy for enthalpy:
 
 $$
 T_m = \frac{h}{a \textrm{ln}\sigma + b \tau + c \textrm{ln}\epsilon_{ar} + d \textrm{ln}\epsilon_{al} + 1}
@@ -599,39 +605,9 @@ For quinones and hydroquinones, both with and without the molecular volume term,
 
 We also note that there appears to be more systematic underestimation of the melting points of the higher $T_m$ and an overestimate of the melting points of the lower $T_m$ molecules, or somewhat of a "flattening" effect (which was also seen in the hydroquinone ML model). We attribute this systematic error to our model for enthalpy. By using all of the molecules in the dataset to generate one set of fitted parameters, we are effectively assuming that all molecules have the same types of intermolecular interactions. However, this is unlikely true, as the higher melting molecules most likely have stronger intermolecular interactions (perhaps hydrogen bonding), and thus should have higher enthalpies of melting. By combining different types of quinones molecules in this way, we are essentially taking an intermediate strength of intermolecular interaction and applying it to all the molecules in the dataset, which results in the over- and under- estimation that we see in our data. This was verified by analyzing the types of molecules on both ends of the spectrum to see if there were obvious reasons why the higher melting compounds might have stronger interactions and the lower melting compounds would have weaker interactions.
 
-Upon observing the difficulties in maintaining a consistent sign for the eccentricity parameters for the quinone dataset, which we suspected was due to its relative unimportance and the small dataset, we decided to combine both the quinone and hydroquinone datasets into a single dataset and fit a model to this larger dataset (~200 molecules). 
-
-We did not observe a significant difference between the test set and training set errors for the thermodynamics-based models - they were almost always within 10 C of each other (in fact, the test set error was sometimes lower than the training set error), indicating that overfitting is not an issue with this model and dataset. Therefore we did not incorporate an overfitting "penalty" similar to the alpha parameter in the machine learning model - the mathematics of incorporating this penalty become far more complicated with non-linear models.
+Upon observing the difficulty in maintaining a consistent sign for $b$ in the quinone dataset, we decided to combine both the quinone and hydroquinone datasets into a single dataset and fit a model to this larger dataset (~200 molecules), as can be seen in the supplemental information. 
 
 '''
-# Combined Quinone + Hydroquinone Plot
-#region
-if st.button('Generate New Combined Quinone + Hydroquinone Plot'):
-
-    # CHANGE MODEL FORM HERE:
-    model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-1)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
-
-    starting_guesses= [-2e+01,5e+02,-7e-02,3e-02,2e-02,2e-02]
-    dataset_name='Quinones + Hydroquinones'
-    num_runs=5
-    vbt_bqhq_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,starting_guesses,num_runs)
-    vbt_bqhq_dict['Plot'].savefig('Plots/VBT_BQHQ_plot.png',dpi=300,bbox_inches="tight")
-
-    st.write(vbt_bqhq_dict['Plot'])
-
-    vbt_bqhq_dict['Parameters'] = vbt_bqhq_dict['Parameters'].rename(columns={0:'g',1:'h',2:'a',3:'b',4:'c',5:'d'})
-    vbt_bqhq_dict['Parameters'].to_csv('Data Files/VBT_BQHQ_Parameters.csv')
-    vbt_bqhq_dict['Errors'].to_csv('Data Files/VBT_BQHQ_Errors.csv')
-else: 
-    bqhq_plot=Image.open('Plots/VBT_BQHQ_plot.png')
-    vbt_bqhq_dict = {'Parameters': pd.read_csv('Data Files/VBT_BQHQ_Parameters.csv',index_col=0,header=0),'Errors': pd.read_csv('Data Files/VBT_BQHQ_Errors.csv',index_col=0,header=0)}
-    st.image(bqhq_plot,use_column_width=True)
-
-
-st.markdown('''VBT model assuming dipole-dipole interaction for combined quinone and hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_bqhq_dict['Errors'].loc['Mean','Train AAE']),float(vbt_bqhq_dict['Errors'].loc['Mean','Test AAE']),float(vbt_bqhq_dict['Errors'].loc['Mean','Train RMSE']),float(vbt_bqhq_dict['Errors'].loc['Mean','Test RMSE']))) 
-st.write(vbt_bqhq_dict['Errors'])
-st.write(vbt_bqhq_dict['Parameters'])
-#endregion
 
 r'''
 The thermodynamics-based model applied to the combined quinone and hydroquinone dataset has higher errors than the both separate quinone and hydroquinone models. This shows that there is value in keeping the models separate. We would expect the strength of the intermolecular interactions between quinone molecules to differ from those of hydroquinones, and these relationships to be reflected in the model parameters. Applying the same model to both datasets appears to result in an "averaging" of these interactions, leading to worse melting point predictions for both, supporting the hypothesis that the strength of the intermolecular interactions varies between quinones and hydroquinones.
@@ -692,9 +668,9 @@ with col2:
 #endregion
 
 r'''
-Both quinone and hydroquinone datasets were modeled using a default alpha value of 100. With repeated re-shuffling of the training and test sets, we find that the quinone ML both qualitatively and quantitatively has higher predictive power than the hydroquinone ML model. The quinone dataset average absolute errors are consistently less than 30 C for both the training and test sets, while for the hydroquinone dataset they are usually between 35-40 C. Visually, we also see that the quinone dataset follows the perfect prediction (dashed) trend line. On the other hand, the hydroquinone models appears skewed, such that the melting points of the lower $T_m$ molecules are overpredicted and those of the higher $T_m$ molecules are underpredicted. It appears that melting point has some dependence that is not as well-captured by the Mordred-generated features for the hydroquinones as it is for the quinones. As the molecular features are generated based just on the SMILES string of the molecule, it is difficult to imagine that complexities such intermolecular interactions (which we would expect to be higher for hydroquinones than quinones due to hydrogen bonding) are well-described by these calculated features. 
+With repeated re-shuffling of the training and test sets, we find that the quinone ML both qualitatively and quantitatively has higher predictive power than the hydroquinone ML model. The quinone dataset average absolute errors are consistently less than 30 C for both the training and test sets, while for the hydroquinone dataset they are usually between 35-40 C. Visually, we also see that the quinone dataset follows the perfect prediction (dashed) trend line. On the other hand, the hydroquinone models appears skewed, such that the melting points of the lower $T_m$ molecules are overpredicted and those of the higher $T_m$ molecules are underpredicted. It appears that melting point has some dependence that is not as well-captured by the Mordred-generated features for the hydroquinones as it is for the quinones. As the molecular features are generated based just on the SMILES string of the molecule, it is difficult to imagine that complexities such intermolecular interactions (which we would expect to be higher for hydroquinones than quinones due to hydrogen bonding) are well-described by these calculated features. 
 
-Both models are highly susceptible to overfitting, as we can see by decreasing alpha. A value of alpha = 0 corresponds to a simple linear regression - there is no penalty for having more features with higher weights (parameters) included in the model. When we do lower alpha to 0, we see that the training set errors (both AAE and RMSE) drop to less than 20 C for the quinones and less than 50 C for the hydroquinones. However, the test set errors explode, with RMSEs above 1000 C for the quinones and 10^14 C for the hydroquinones. Again the model is noticeably worse for the hydroquinones.
+Both models are highly susceptible to overfitting, due to the large number of features compared to the size of the dataset. A relatively high penalization term ($\alpha$ = 100) was used to reduce the total magnitude of all the coefficients in the model and thus mitigate overfitting.
 
 '''
 
@@ -749,14 +725,14 @@ with col2:
 r'''
 Applying the thermodynamics-based features in a ML ridge regression model results in average absolute errors very similar to the VBT model for both the quinone and hydroquinone datasets. This is counterintuitive to our assumption that applying a model with a targeted functional form should result in an improvement in prediction performance. The performance of the hydroquinone model is still better than that of the ML model (with the Mordred-calculated features), implying that it is the thermodynamics-based features that are key in improving model performance, rather than the functional form of the model. 
 
-The ridge regression also shows the relative importances of the VBT features and how they differ between the quinone and hydroquinone models. In analyzing the hydroquinone ridge regression model (which outperforms the ML model with Mordred-calculated features), the most predictive feature is the molecular volume, $V_m$. This is consistent with our results showing that the hydroquinone thermodynamics-based model performance worsened after removing the $V_m$ feature. The number of torsional angles, $\tau$, is the second most important feature in the hydroquinone ridge regression model, and was significantly and consistently positive in the thermodynamics-based model. The molecular symmetry number, $\sigma$, is the third most important feature in the ridge model, and was also significantly and consistently negative in the thermodynamic model. On the other hand, the aromatic and aliphatic eccentricities didn't seem to be that important in the hydroquinone thermodynamics-based model, as indicated by their fluctuating signs from run to run and wider CIs, and are correspondingly the least important features in the ridge regression model.
+The ridge regression also shows the relative importances of the VBT features and how they differ between the quinone and hydroquinone models. In analyzing the hydroquinone ridge regression model (which outperforms the ML model with Mordred-calculated features), the most predictive feature is the molecular volume, $V_m$. This is consistent with our results showing that the hydroquinone thermodynamics-based model performance worsened after removing the $V_m$ feature. The number of torsional angles, $\tau$, is the second most important feature in the hydroquinone ridge regression model, and was significantly and consistently positive in the thermodynamics-based model. The molecular symmetry number, $\sigma$, is the third most important feature in the ridge model, and was also significantly and consistently negative in the thermodynamic model. On the other hand, the aromatic eccentricity didn't seem to be that important in the hydroquinone thermodynamics-based model, as indicated by its fluctuating signs from run to run and wider CIs, and it is correspondingly one of the least important features in the ridge regression model.
 '''
 
 # Conclusion section
 r'''
 ## Conclusion
 
-Melting point prediction is an immensely challenging problem that has yet to be fully solved. With this work, we hope to have demonstrated that a scientific understanding of the molecules of interest and their bonding environments, along with a thermodynamic understanding of the calculation of $T_m$ can aid in categorizing molecules so that a melting point can be predicted with very few features, with an accuracy comparable to that of traditional machine learning methods. This was shown to be particularly successful for our hydroquinone molecules, model with thermodynamics-based features outperformed the "traditional" ML model, despite having only 5-6 features. However, further improvement is still required, especially for the hydroquinone melting point prediction. Both the machine learning and thermodynamics-based models result in a "flattening" of the predicted melting point for the hydroquinones, indicating the lack of a feature that is very predictive for melting point. Further featurization, especially for the thermodynamics-based model, could improve the melting point prediction for the hydroquinone dataset.
+Melting point prediction is an immensely challenging problem that has yet to be fully solved. With this work, we hope to have demonstrated that a scientific understanding of the molecules of interest and their bonding environments, along with a thermodynamic understanding of the calculation of $T_m$ can aid in categorizing molecules so that a melting point can be predicted with very few features, with an accuracy comparable to that of traditional machine learning methods. This was shown to be particularly successful for our hydroquinone molecules, as the model with thermodynamics-based features outperformed the Mordred-calculated features, despite having only 5-6 features. However, further improvement is still required, especially for the hydroquinone melting point prediction. Both the machine learning and thermodynamics-based models result in a "flattening" of the predicted melting point for the hydroquinones, indicating the lack of a feature that is very predictive for melting point. Further featurization, especially for the thermodynamics-based model, could improve the melting point prediction for the hydroquinone dataset.
 '''
 st.markdown('''
 We found that the machine learning model featurized with the Mordred molecular descriptor calculator performed best for the quinone dataset (test set AAE: `{:.1f} C`). However, the thermodynamics features applied in both the hypothesized functional form (test set AAE: `{:.1f} C`) and and standard linear regression (test set AAE: `{:.1f} C`) outperformed the Mordred-featurized ML model (test set AAE: `{:.1f} C`) for the hydroquinone dataset, demonstrating the power of a few carefully selected features over thousands of general and quickly calculated features. 
@@ -796,7 +772,7 @@ r'''
 
 This work was supported in part by ExxonMobil and the National Science Foundation. This analysis would not have been possible without the creators of the following python packages: Streamlit, pandas, numpy, matplotlib, scipy, statistics, sklearn, rdkit, and mordred. Building our ML datasets was made possible using the Reaxys database. Acquiring crystal structures for most of the compounds in our datasets was made significantly helped by the CCDC.
 
-AIonics - Austin
+The authors also thank Dr. Austin Sendek at Aionics for further validating the Mordred-calculated feature machine learning approach.
 '''
 
 r'''
@@ -810,7 +786,7 @@ r'''
 
 All data and code used in our analysis can be viewed in our repository (URL: https://github.com/dganapat/melting_point_prediction_paper) - readers can test different model forms by downloading the repository and changing the model form for the desired dataset in the mp_prediction_paper.py script. The interactive version of this paper can be viewed at https://dganapat-melting-point-prediction-pa-mp-prediction-paper-00ju76.streamlitapp.com/. If viewing this paper in our Streamlit app, readers have the option to re-shuffle the training and test sets and view the results by clicking "Generate New Plot" for the relevant dataset and model type (but will not be able to test different model forms). The displayed errors and parameter values will automatically update as well.
 
-### Section 1: Hydrocarbon Model
+### Hydrocarbon Dataset
 In these set of molecules, we expect VdW interactions to dominate. We use this understanding to represent the enthalpy of melting as:
 
 $$
@@ -867,6 +843,38 @@ r'''
 Both the average absolute and root mean square errors for the hydrocarbon dataset were around 30 C or less for both the training set and test set, which is comparable to errors obtained for other melting point prediction models in literature (which did not use a test set) \cite{Preiss2011}.
 
 '''
+r'''
+### Combined Quinone + Hydroquinone Dataset
+'''
+
+#region
+if st.button('Generate New Combined Quinone + Hydroquinone Plot'):
+
+    # CHANGE MODEL FORM HERE:
+    model_form= '(parameters[0]*predictors["V_m (nm3)"]**(-1)+parameters[1])/(parameters[2]*np.log(predictors["sigma"])+parameters[3]*predictors["tau"]+1+parameters[4]*np.log(predictors["Eccentricity(Ear)"])+parameters[5]*np.log(predictors["Eccentricity(Eal)"]))'
+
+    starting_guesses= [-2e+01,5e+02,-7e-02,3e-02,2e-02,2e-02]
+    dataset_name='Quinones + Hydroquinones'
+    num_runs=5
+    vbt_bqhq_dict=vbt_model_automated(dataset_dict,dataset_name,model_form,starting_guesses,num_runs)
+    vbt_bqhq_dict['Plot'].savefig('Plots/VBT_BQHQ_plot.png',dpi=300,bbox_inches="tight")
+
+    st.write(vbt_bqhq_dict['Plot'])
+
+    vbt_bqhq_dict['Parameters'] = vbt_bqhq_dict['Parameters'].rename(columns={0:'g',1:'h',2:'a',3:'b',4:'c',5:'d'})
+    vbt_bqhq_dict['Parameters'].to_csv('Data Files/VBT_BQHQ_Parameters.csv')
+    vbt_bqhq_dict['Errors'].to_csv('Data Files/VBT_BQHQ_Errors.csv')
+else: 
+    bqhq_plot=Image.open('Plots/VBT_BQHQ_plot.png')
+    vbt_bqhq_dict = {'Parameters': pd.read_csv('Data Files/VBT_BQHQ_Parameters.csv',index_col=0,header=0),'Errors': pd.read_csv('Data Files/VBT_BQHQ_Errors.csv',index_col=0,header=0)}
+    st.image(bqhq_plot,use_column_width=True)
+
+
+st.markdown('''VBT model assuming dipole-dipole interaction for combined quinone and hydroquinone dataset. Training set absolute average error is `{:.2f} C` and test set average absolute error is `{:.2f} C`. Training set RMSE is `{:.2f} C` and test set RMSE is `{:.2f} C`, based on the average over five runs of the model.'''.format(float(vbt_bqhq_dict['Errors'].loc['Mean','Train AAE']),float(vbt_bqhq_dict['Errors'].loc['Mean','Test AAE']),float(vbt_bqhq_dict['Errors'].loc['Mean','Train RMSE']),float(vbt_bqhq_dict['Errors'].loc['Mean','Test RMSE']))) 
+st.write(vbt_bqhq_dict['Errors'])
+st.write(vbt_bqhq_dict['Parameters'])
+#endregion
+
 
 # How to put code in markdown using python formatting
     # '''
