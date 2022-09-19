@@ -1,95 +1,96 @@
-Compound,Chemical Name,sigma,tau,V_m (nm3),,r_m (nm),T_m (K),T_m range (K),Eccentricity(Ear),Eccentricity(Eal),CCDC Number,Notes
-,"2,3-dimethoxy-5-methyl-1,4-benzenediol",1,1.5,0.234695,4.260849187,,349.25,,6,1,643164,
-,"Methyl 2,5-dihydroxybenzoate",1,1,0.1938825,5.157763078,,356.95,,6,1,214606,
-,"2,5-dihydroxybenzaldehyde",1,0,0.1583675,6.314426887,,370,,6,1,674088,Measurement temp = 173 K so crystal structure might not be accurate at room temperature
-,"2,5-Dihydroxy-4-(3-methylbut-3-en-1-ynyl)benzaldehyde",1,0.5,0.26025,3.842459174,,373,,6,1,272228,
-,"2-(2-Oxazolin-2-yl)benzene-1,4-diol",1,0,0.21505875,4.649892181,,388.35,,6,5,641814,
-,"2,3-Dichlorobenzene-1,4-diol",2,0,0.170805,5.854629548,,417.84,,6,1,731328,
-,"2,5-Dihydroxy-benzeneacetic acid",1,1,0.18681,5.353032493,,423,,6,1,1207565,
-Q25H,"2,3,5-trimethyl-1,4-hydroquinone",1,0,0.197915,5.052674128,,442,,6,1,765093,Measurement temp = 95 K so crystal structure might not be accurate at room temp
-,Hydroquinone,4,0,0.13243,7.551159103,,444.4,,6,1,1179128,LOTS of polymorphs
-,"1,4-dihydroxy-2-(pyrazol-1'-yl)benzene",1,0,0.1960275,5.101325069,,454,,11,1,1257334,
-,"3-t-butyl-2,5-dihydroxybenzaldehyde",1,0,0.24752,4.040077569,,455,,6,1,999503,
-,"2,5-dihydroxybenzene-1,4-dicarbaldehyde",1,0.5,0.16746,5.971575302,,534,,6,1,1938693,
-,"1,2-dihydroxybenzol; Catechol",2,0,0.13595,7.355645458,,376,,6,1,,https://materials-springer-com.stanford.idm.oclc.org/googlecdn/assets/sm_lbs/373/sm_lbs_978-3-540-38203-4_16/sm_lbs_978-3-540-38203-4_16.pdf?trackRequired=true&originUrl=/lb/docs/sm_lbs_978-3-540-38203-4_16
-,"2,5-dihydroxybenzoic acid",1,0,0.162124084,6.168115036,,482,,6,1,,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/doi/epdf/10.1107/S0567740882006189
-,Homogentisic acid,1,1,0.18681,5.353032493,,422,,6,1,,https://journals-iucr-org.stanford.idm.oclc.org/c/issues/1995/04/00/as1128/as1128.pdf
-,"2,3,5,6-tetrachlorobenzene-1,4-diol",4,0,0.2019825,4.950923966,,505,,6,1,,https://chemistry-europe-onlinelibrary-wiley-com.stanford.idm.oclc.org/action/downloadSupplement?doi=10.1002%2Fchem.201900377&file=chem201900377-sup-0001-misc_information.pdf
-,"2,5-bis(1,1-dimethylethyl)-1,4-benzenediol",2,0,0.3431801025,2.913921853,,489,,6,1,,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/doi/epdf/10.1002/anie.199417551
-,"2,5-dimethylhydroquinone",2,0,0.176485,5.666203927,,485,,6,1,,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/doi/epdf/10.1107/S0108270197007191
-,Durohydroquinone,4,0,0.21538,4.642956635,,505,,6,1,,https://pubs-rsc-org.stanford.idm.oclc.org/en/content/articlepdf/1986/p2/p29860000557
-,"2,3,5,6-tetrafluoro-1,4-benzenediol",4,0,0.154485,6.473120368,,440,,6,1,,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/iucr/doi/10.1107/S0108768199005911
-,"2,3,5,6-tetrabromohydroquinone",4,0,0.23249,4.301260269,,525,,6,1,,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/iucr/doi/10.1107/S0108768199005911
-,"diethyl 2,5-dihydroxyterephthalate",2,4.5,0.298455,3.350588866,,406,,6,1,,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/doi/epdf/10.1107/S0108270196005306
-,"2,5-bis(pyrazol-1-yl)-1,4-dihydroxybenzene",2,0.5,0.2671345667,3.74343168,,479,,16,1,,https://pubs-acs-org.stanford.idm.oclc.org/doi/pdf/10.1021/ja00158a039
-,"2,3,5,6-tetracyanohydroquinone",4,0,0.2232825,4.47863133,,523,,6,1,,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/doi/pdf/10.1002/ange.19931050311
-,"2-(methylsulfonyl)benzene-1,4-diol",1,0.5,0.200338972,4.991540038,,416.5,,6,1,,https://pubs-rsc-org.stanford.idm.oclc.org/en/content/articlepdf/1988/p2/p29880000265
-229,"2,3-bis(pyrazol-1-yl)-1,4-dihydroxybenzene",2,0.5,0.28197,3.546476576,,450,,16,1,,https://www-degruyter-com.stanford.idm.oclc.org/downloadpdf/journals/znb/61/3/article-p252.pdf
-,"1,4-dihydroxy-9,10-anthracenedione",2,0,0.2782340625,3.594096248,,471,,14,1,,https://pubs-rsc-org.stanford.idm.oclc.org/en/content/articlepdf/2015/ce/c5ce00147a
-,"5,8-dihydroxy-1,4-naphthoquinone",2,0,0.2217078696,4.510439805,,507,,10,1,,https://pubs-acs-org.stanford.idm.oclc.org/doi/pdf/10.1021/ja01198a073
-,"1,4-dihydroxynaphthalene",2,0,0.197,5.076142132,,463,,10,1,,https://journals-iucr-org.stanford.idm.oclc.org/q/issues/1967/12/00/a05815/a05815.pdf
-,bellidifolin,1,0.5,0.28136,3.554165482,,538,,14,1,,https://link-springer-com.stanford.idm.oclc.org/content/pdf/10.1007/s10870-005-2802-7.pdf
-,"2,3-dichloro-1,4-dihydroxyanthracene",2,0,0.29967,3.337004038,,523,,14,1,,https://pubs-acs-org.stanford.idm.oclc.org/doi/pdf/10.1021/ja00217a026
-,"5,8-dihydroxy-2,7-dimethoxy-1,4-naphthoquinone",2,1.5,0.2714175,3.684360809,,545,,10,1,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6222619/pdf/molecules-23-01905.pdf
-,"5,8-dihydroxy-2,3-dimethyl-1,4-naphthoquinone",2,0,0.2447825,4.085259363,,438,,10,1,,https://www-sciencedirect-com.stanford.idm.oclc.org/science/article/pii/0022286084802471
-,"1,4-dihydroxy-6,7,8,9-tetrahydro-5H-benzocycloheptene-5,9-dione",2,0,0.2306225,4.336090364,,421,,5,6,,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/doi/epdf/10.1107/S056774088001028X
-,"1,4-dihydroxy-2-propanoylnaphthalene",1,1,0.26052875,3.838347975,,441,,10,1,,https://www-thieme-connect-de.stanford.idm.oclc.org/products/ejournals/pdf/10.1055/s-0028-1087272.pdf
-,"5,8-dihydroxy-2,3-dimethoxy-6-methylnaphtho-1,4-quinone",1,1.5,0.2919402625,3.425358295,,395,,10,1,,
-,"2,5-Dibenzoyl-1,4-dihydroxybenzene",3,1.5,0.376895,2.653258865,,477,203-205C,6,1,197566,
-,"(E)-2-((2-(hydroxymethyl)-phenylimino)methyl)benzene-1,4-diol",1,2,0.30164,3.315210184,,441,167-169C,12,1,734185,
-,"(+-)-1,4-Dihydroxy-2,3,6,7-tetramethoxy-10-phenyl-9,10-dihydrocyclohepta(2,1-b)-4H-chromene-8,11-dione",1,4,0.52819875,1.893226745,,484.5,211-212C,9,6,1108131,
-,"cis-1,2,3a,9b-Tetrahydro-6,9-dihydroxy-4-nitronaphtho(2,1-b)furan",1,0,0.255,3.921568627,,489,,5,8,1110300,
-,"5,8-Dihydroxy-6-methoxy-4,7-dimethyl-1-(1-methylbut-3-enyl)-3,4-dihydronaphthalen-2(1H)-one",1,3,0.4136175,2.417692675,,489,,5,5,263118,
-,"2-((4-Hexyloxyphenyl)iminomethyl)benzene-1,4-diol",1,6.5,0.4263625,2.345422029,,389,,12,1,660320,
-,"Methyl 2,3-O-isopropylidene-5-(2-quinizarinyl)-α-D-lyxofuranoside",1,2,0.5235483333,1.910043326,,449,,10,9,1126100,
-,"3,8-Dihydroxy-1a,9a-dihydro-1H-cyclopropa(b)anthracene-2,9-dione",1,0,0.3735466667,2.67704169,,434,,9,6,674957,
-,(+-)-Bostrycin acetonide,1,0.5,0.42621,2.346261233,,481.5,208-109C,9,8,1137862,
-,"7,11-Dihydroxy-3,4,9,11b-tetramethyl-1,2,8,9,11b-pentahydrophenanthro(3,2-b)furan-6(2H)-one",1,0,0.4397325,2.274109828,,488,214-216C,4,14,1139326,
-,"1,4-Dihydroxy-anthraquinone",2,0,0.258945,3.861823939,,468,,14,1,1140045,
-,"5,6,8-trihydroxy-3-((S)-2-hydroxypropyl)-1H-2-benzopyran-1-one",1,1.5,0.28407375,3.520212621,,479.5,479-480,10,1,1580272,
-,"2-Bromo-1,4-dihydroxy-9,10-anthraquinone",1,0,0.27813,3.595440981,,485,,10,1,1025364,
-,Cladospirone B,1,0,0.37981,2.632895395,,503,,15,8,142793,
-,"5,10-Dihydroxy-1,3-dihydro-1,3-dimethyl-9-methoxy-2H-naphtho(2,3-c)pyran-4-one",1,0.5,0.34759,2.876952732,,408,,9,5,1147307,
-,"(2'S,4aS)-4,4a-Dihydro-5,6,8-trihydroxy-7-(2'-hydroxypropyl)-1,2,4a-trimethylphenanthrene-3,9-dione",1,1.5,0.4401,2.272210861,,461.75,187.5-190C,5,9,1153332,
-,"(E)-2-[3-(Trifluoromethyl)phenyliminomethyl]benzene-1,4-diol",1,1,0.31105,3.214917216,,405.5,404-407,12,1,754324,
-,"3,6-Dihydroxy-1a-(3-methyl-2-butenyl)naphth(2,3-b)oxirene-2,7(1aH,7aH)-dione",1,2,0.327565,3.052829209,,358.5,85-86C,5,6,1160869,
-,4-Hydroxy-2-methylsulfonylphenol,1,0.5,0.2003275,4.991825885,,416.5,416-417,6,1,1163829,
-,"2,3-Dichloro-1,4-dihydroxyanthraquinone",2,0,0.29958,3.338006542,,521,,14,1,1164545,
-,"1-(2,5-Dihydroxy-4,6-dimethoxyphenyl)-3-(3,4-dimethoxyphenyl)propenone",1,5.5,0.42609,2.346922012,,444.5,171-172C,12,1,217832,
-,"3,6-Dihydroxy-2,4-dimethoxyacetophenone",1,2,0.247825,4.035105417,,430,429-431,6,1,217833,
-,"16(S)-12,16-Epoxy-11,14-dihydroxy-6-methoxy-17(15-16)-abeo-abiη-5,8,11,13-teraen-7-one",1,0.5,0.4638675,2.155788021,,478,204-206C,4,13,1172118,
-,"2-(3,7-Dimethylocta-2,6-dienyl)-1,3,5,8-tetrahydroxyxanthone",1,4.5,0.482705,2.071658674,,480,479-481,14,1,294138,
-,"2-(4β-Methyltetrahydrofuran-2α-yl)-5-(4β-methyltetrahydrofuran-2β-yl)-1,4-dihydroxybenzene",2,0.5,0.3786625,2.640874129,,479,478-480,6,10,136572,
-,"2,5-bis(1-Piperidinylmethyl)benzene-1,4-diol ",2,2.5,0.42216,2.368770135,,470,469-471,6,12,248780,
-,"2-(((diphenylmethyl)imino)methyl)benzene-1,4-diol",1,1.5,0.392985,2.544626385,,426,,18,1,1509519,
-,"5,8-dihydroxy-2,2-dimethyl-2H-1-benzopyran-6,7-dicarbaldehyde",1,0,0.28395,3.521746786,,464,,5,5,1886619,
-,"2,2-dimethyl-6,7-bis[(piperidin-1-yl)methyl]-2H-1-benzopyran-5,8-diol",1,2,0.526635,1.898848348,,453,,5,17,1890051,
-,"2-(2',5'-Dihydroxyphenyl)-4,4,5,5-tetramethyl-4,5-dihydro-1H-imidazolyl-1-oxyl-3-oxide",1,0,0.331305,3.018366762,,382,,6,5,1206721,
-,"(3-Benzoyl-1,4-dihydroxy-2-naphthyl)phenylmethanone",2,0.5,0.45433,2.201043295,,417.5,144-145C,22,1,161442,
-,"2-Methyl-1,4-dihydroxynaphthalene",1,0,0.218055,4.585998945,,454,,10,1,1211007,
-,"1-(1,4-Dihydroxynaphthalen-2-yl)propan-1-one",1,1,0.26052875,3.838347975,,438,164-165C,10,1,692479,
-,"1-(1,4-Dihydroxynaphthalen-2-yl)heptan-1-one",1,5,0.3577425,2.79530668,,413.5,139-142C,10,1,692480,
-,"2,5-bis(Morpholinomethyl)hydroquinone",2,2.5,0.40103,2.493579034,,481,207-209,6,12,264918,
-,"3-Methyl-5,7,8-trihydroxy-2-aza-9,10-anthraquinone",1,0,0.278015,3.596928223,,590,,14,1,1216570,
-,Gerardianin A,1,0,0.4326275,2.311457316,,477,,4,13,1224445,
-,"3,5,8,10-tetrahydroxy-6-methyl-1,3,4,4a,9a,10-hexahydroanthracen-9(2H)-one",1,0,0.3307525,3.023408742,,509,,5,9,1474482,
-,"3,5,8,10-tetrahydroxy-6-(hydroxymethyl)-1,3,4,4a,9a,10-hexahydroanthracen-9(2H)-one",1,0,0.335065,2.984495546,,524,250-252C,5,9,1480635,
-,"1,4-Dihydroxy-2,3,5,6-tetracyanobenzene",4,0,0.22328,4.478681476,,524,,6,1,1229801,
-,"3,6-Dihydroxy-exo-9-fluoro-syn-11-chloro-tricyclo(6.2.1.02,7)undeca-2(7),3,5-triene",1,0,0.247295,4.043753412,,417,416-418,5,6,1236361,
-,Anhydrofusarubin,1,0.5,0.31199,3.205230937,,473.5,,9,5,602058,
-,"(3aSR,4RS,11SR,11aRS)-3a,4,11,11a-Tetrahydro-4,6,9-trihydroxy-11-methoxy-2,2,3a-trimethyl-24-anthra(2,3-d)dioxol-5,10-dione",1,0.5,0.4466925,2.238676494,,417.5,,9,8,1140573,
-,"1-(2,5-Dihydroxy-4,6-dimethoxyphenyl)-3-(4-methoxyphenyl)propenone",1,4.5,0.40482625,2.470195547,,402,,12,1,217831,
-,"(16S)-12,16-Epoxy-6,11,14-trihydroxy-17(15-16)-abeo-abiη-5,8,11,13-tetraene-3,7-dione",1,0,0.4371525,2.287531239,,533.5,,4,13,1194938,
-,Garciniaxanthone I,1,2,0.50466,1.981532121,,528,,14,7,680049,
-,"1,4-Dihydro-1,2,3,4-tetrachloro-1,4-dichloromethanonaphthalene-5,8-diol",1,0,0.34798875,2.873656117,,461,,5,6,1249864,
-," 1,4,6,9-Tetrahydro-1,2,3,4,6,7,8,9-octachloro-1,4-dichloromethano-6,9-dimethoxymethanoanthracene-5,10-diol",1,1.5,0.589035,1.697691988,,515,,4,12,1249866,
-,"1,5,8-Trihydroxy-3-methoxyxanthone",1,0.5,0.281345,3.554354973,,529.5,,14,1,235775,
-,2-(((4-Chlorophenyl)imino)methyl)hydroquinone,1,1,0.277695,3.60107312,,440,439-441,12,1,731362,
-,"2,3-Dichloro-5,6-dicyano-1,4-dihydroxybenzene",2,0,0.22629,4.419108224,,590,,6,1,1265596,
-,"Diethyl 3,6-dibromo-2,5-dihydroxyterephthalate",2,4.5,0.3603325,2.775214559,,429,,6,1,131889,
-,"2,6-Dibenzoylhydroquinone",1,1.5,0.38254,2.614105714,,483,,18,1,128175,
-,"1-(5,8-dihydro-1,4-dihydroxy-5,8-dioxo-2-naphthyl)-4-methylpent-3-en-1-yl cinnamate",1,5,0.51036,1.959401207,,366.5,,16,1,174838,
-,Aureoquinone,1,0,0.26522875,3.770330328,,541.5,268-269C,10,1,1278040,
-,"7,11-Dihydroxy-3,4,8,11b-tetramethyl-1,8,9,11b-tetrahydrophenanthro[3,2-b]furan-2,6-dione",1,0,0.420415,2.378602096,,548,,4,13,821799,
-,"(R)-2,3,4,4a-Tetrahydro-5,8,10-trihydroxy-6-methoxy-1,1,4a-trimethyl-7-(1-methylethyl)-9-(1H)-phenanthrenone",1,1.5,0.34337,2.912310336,,445.5,,5,9,1285108,
-,"(4aS,10aR)-2,3,4,4a,10,10a-Hexahydro-5,8-dihydroxy-7-isopropyl-6-methoxy-1,1-dimethylphenanthren-9(1H)-one",1,1.5,0.4525,2.209944751,,466,,5,9,258067,
+﻿Compound,Chemical Name,sigma,tau,SP3 (LIN),SP3 (BR),SP2,ROT,Ring,V_m (nm3),1/V_m,r_m (nm),T_m (K),T_m range (K),Eccentricity(Ear),Eccentricity(Eal),CCDC Number,Notes
+,"2,3-dimethoxy-5-methyl-1,4-benzenediol",1,1.5,2,0,0,,1,0.234695,4.260849187,,349.25,,6,1,643164,
+,"Methyl 2,5-dihydroxybenzoate",1,1,1,0,1,,1,0.1938825,5.157763078,,356.95,,6,1,214606,
+,"2,5-dihydroxybenzaldehyde",1,0,0,0,1,,1,0.1583675,6.314426887,,370,,6,1,674088,Measurement temp = 173 K so crystal structure might not be accurate at room temperature
+,"2,5-Dihydroxy-4-(3-methylbut-3-en-1-ynyl)benzaldehyde",1,0.5,0,0,2,,1,0.26025,3.842459174,,373,,6,1,272228,
+,"2-(2-Oxazolin-2-yl)benzene-1,4-diol",1,0,0,0,0,,2,0.21505875,4.649892181,,388.35,,6,5,641814,
+,"2,3-Dichlorobenzene-1,4-diol",2,0,0,0,0,,1,0.170805,5.854629548,,417.84,,6,1,731328,
+,"2,5-Dihydroxy-benzeneacetic acid",1,1,1,0,1,,1,0.18681,5.353032493,,423,,6,1,1207565,
+Q25H,"2,3,5-trimethyl-1,4-hydroquinone",1,0,0,0,0,,1,0.197915,5.052674128,,442,,6,1,765093,Measurement temp = 95 K so crystal structure might not be accurate at room temp
+,Hydroquinone,4,0,0,0,0,,1,0.13243,7.551159103,,444.4,,6,1,1179128,LOTS of polymorphs
+,"1,4-dihydroxy-2-(pyrazol-1'-yl)benzene",1,0,0,0,0,,2,0.1960275,5.101325069,,454,,11,1,1257334,
+,"3-t-butyl-2,5-dihydroxybenzaldehyde",1,0,0,1,1,,1,0.24752,4.040077569,,455,,6,1,999503,
+,"2,5-dihydroxybenzene-1,4-dicarbaldehyde",1,0.5,0,0,2,,1,0.16746,5.971575302,,534,,6,1,1938693,
+,"1,2-dihydroxybenzol; Catechol",2,0,0,0,0,,1,0.13567,7.355645458,,376,,6,1,1120672,https://materials-springer-com.stanford.idm.oclc.org/googlecdn/assets/sm_lbs/373/sm_lbs_978-3-540-38203-4_16/sm_lbs_978-3-540-38203-4_16.pdf?trackRequired=true&originUrl=/lb/docs/sm_lbs_978-3-540-38203-4_16
+,"2,5-dihydroxybenzoic acid",1,0,0,0,1,,1,0.162124084,6.168115036,,482,,6,1,1109045,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/doi/epdf/10.1107/S0567740882006189
+,Homogentisic acid,1,1,1,0,1,,1,0.18681,5.353032493,,422,,6,1,1207565,https://journals-iucr-org.stanford.idm.oclc.org/c/issues/1995/04/00/as1128/as1128.pdf
+,"2,3,5,6-tetrachlorobenzene-1,4-diol",4,0,0,0,0,,1,0.205605,4.950923966,,505,,6,1,1267908,https://chemistry-europe-onlinelibrary-wiley-com.stanford.idm.oclc.org/action/downloadSupplement?doi=10.1002%2Fchem.201900377&file=chem201900377-sup-0001-misc_information.pdf
+,"2,5-bis(1,1-dimethylethyl)-1,4-benzenediol",2,0,0,2,0,,1,0.343158333,2.913921853,,489,,6,1,1174963,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/doi/epdf/10.1002/anie.199417551
+,"2,5-dimethylhydroquinone",2,0,0,0,0,,1,0.18103,5.666203927,,485,,6,1,1143539,https://pubs-rsc-org.stanford.idm.oclc.org/en/content/articlepdf/1986/p2/p29860000557
+,Durohydroquinone,4,0,0,0,0,,1,0.21538,4.642956635,,505,,6,1,1143540,https://pubs-rsc-org.stanford.idm.oclc.org/en/content/articlepdf/1986/p2/p29860000557
+,"2,3,5,6-tetrafluoro-1,4-benzenediol",4,0,0,0,0,,1,0.154485,6.473120368,,440,,6,1,138566,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/iucr/doi/10.1107/S0108768199005911
+,"2,3,5,6-tetrabromohydroquinone",4,0,0,0,0,,1,0.23249,4.301260269,,517,,6,1,138567,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/iucr/doi/10.1107/S0108768199005911
+,"diethyl 2,5-dihydroxyterephthalate",2,4.5,4,0,2,,1,0.298455,3.350588866,,406,,6,1,128054,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/doi/epdf/10.1107/S0108270196005306
+,"2,5-bis(pyrazol-1-yl)-1,4-dihydroxybenzene",2,0.5,0,0,0,,3,0.267134567,3.74343168,,479,,16,1,1257335,https://pubs-acs-org.stanford.idm.oclc.org/doi/pdf/10.1021/ja00158a039
+,"2,3,5,6-tetracyanohydroquinone",4,0,0,0,0,,1,0.2232825,4.47863133,,523,,6,1,1229801,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/doi/pdf/10.1002/ange.19931050311
+,"2-(methylsulfonyl)benzene-1,4-diol",1,0.5,0,1,0,,1,0.200338972,4.991540038,,416.5,,6,1,1163829,https://pubs-rsc-org.stanford.idm.oclc.org/en/content/articlepdf/1988/p2/p29880000265
+229,"2,3-bis(pyrazol-1-yl)-1,4-dihydroxybenzene",2,0.5,0,0,0,,3,0.28197,3.546476576,,450,,16,1,202037,https://www-degruyter-com.stanford.idm.oclc.org/downloadpdf/journals/znb/61/3/article-p252.pdf
+,"1,4-dihydroxy-9,10-anthracenedione",2,0,0,0,0,,1,0.278234063,3.594096248,,471,,14,1,1044980,https://pubs-rsc-org.stanford.idm.oclc.org/en/content/articlepdf/2015/ce/c5ce00147a
+,"5,8-dihydroxy-1,4-naphthoquinone",2,0,0,0,0,,1,0.2531225,4.510439805,,507,,10,1,1139995,https://pubs-acs-org.stanford.idm.oclc.org/doi/pdf/10.1021/ja01198a073
+,"1,4-dihydroxynaphthalene",2,0,0,0,0,,1,0.197,5.076142132,,463,,10,1,1223307,https://journals-iucr-org.stanford.idm.oclc.org/q/issues/1967/12/00/a05815/a05815.pdf
+,bellidifolin,1,0.5,1,0,0,,1,0.28136,3.554165482,,538,,14,1,235775,https://link-springer-com.stanford.idm.oclc.org/content/pdf/10.1007/s10870-005-2802-7.pdf
+,"2,3-dichloro-1,4-dihydroxyanthracene-9,10-dione",2,0,0,0,0,,1,0.29967,3.337004038,,523,,14,1,1164545,https://pubs-acs-org.stanford.idm.oclc.org/doi/pdf/10.1021/ja00217a026
+,"5,8-dihydroxy-2,7-dimethoxy-1,4-naphthoquinone",2,1.5,2,0,0,,1,0.2714175,3.684360809,,545,,10,1,1859343,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6222619/pdf/molecules-23-01905.pdf
+,"5,8-dihydroxy-2,3-dimethyl-1,4-naphthoquinone",2,0,0,0,0,,1,0.2447825,4.085259363,,438,,10,1,1125030,https://www-sciencedirect-com.stanford.idm.oclc.org/science/article/pii/0022286084802471
+,"1,4-dihydroxy-6,7,8,9-tetrahydro-5H-benzocycloheptene-5,9-dione",2,0,0,0,0,,1,0.2306225,4.336090364,,421,,5,6,1140047,https://onlinelibrary-wiley-com.stanford.idm.oclc.org/doi/epdf/10.1107/S056774088001028X
+,"1,4-dihydroxy-2-propanoylnaphthalene",1,1,1,0,1,,1,0.26052875,3.838347975,,441,,10,1,692479,https://www-thieme-connect-de.stanford.idm.oclc.org/products/ejournals/pdf/10.1055/s-0028-1087272.pdf
+,"5,8-dihydroxy-2,3-dimethoxy-6-methylnaphtho-1,4-quinone",1,1.5,2,0,0,,1,0.291940263,3.425358295,,395,,10,1,1161869,
+,"2,5-Dibenzoyl-1,4-dihydroxybenzene",3,1.5,0,0,2,,3,0.376895,2.653258865,,477,203-205C,6,1,197566,
+,"(E)-2-((2-(hydroxymethyl)-phenylimino)methyl)benzene-1,4-diol",1,2,1,0,2,,2,0.30164,3.315210184,,441,167-169C,12,1,734185,
+,"(+-)-1,4-Dihydroxy-2,3,6,7-tetramethoxy-10-phenyl-9,10-dihydrocyclohepta(2,1-b)-4H-chromene-8,11-dione",1,4,4,0,0,,2,0.52819875,1.893226745,,484.5,211-212C,9,6,1108131,
+,"cis-1,2,3a,9b-Tetrahydro-6,9-dihydroxy-4-nitronaphtho(2,1-b)furan",1,0,0,0,1,,1,0.255,3.921568627,,489,,5,8,1110300,
+,"5,8-Dihydroxy-6-methoxy-4,7-dimethyl-1-(1-methylbut-3-enyl)-3,4-dihydronaphthalen-2(1H)-one",1,3,2,1,1,,1,0.4136175,2.417692675,,489,,5,5,263118,
+,"2-((4-Hexyloxyphenyl)iminomethyl)benzene-1,4-diol",1,6.5,6,0,2,,2,0.4263625,2.345422029,,389,,12,1,660320,
+,"Methyl 2,3-O-isopropylidene-5-(2-quinizarinyl)-Œ±-D-lyxofuranoside",1,2,1,1,0,,2,0.523548333,1.910043326,,449,,10,9,1126100,
+,"3,8-Dihydroxy-1a,9a-dihydro-1H-cyclopropa(b)anthracene-2,9-dione",1,0,0,0,0,,1,0.373546667,2.67704169,,434,,9,6,674957,
+,(+-)-Bostrycin acetonide,1,0.5,1,0,0,,1,0.42621,2.346261233,,481.5,208-109C,9,8,1137862,
+,"7,11-Dihydroxy-3,4,9,11b-tetramethyl-1,2,8,9,11b-pentahydrophenanthro(3,2-b)furan-6(2H)-one",1,0,0,0,0,,1,0.4397325,2.274109828,,488,214-216C,4,14,1139326,
+,"1,4-Dihydroxy-anthraquinone",2,0,0,0,0,,1,0.258945,3.861823939,,468,,14,1,1140045,
+,"5,6,8-trihydroxy-3-((S)-2-hydroxypropyl)-1H-2-benzopyran-1-one",1,1.5,1,1,0,,1,0.28407375,3.520212621,,479.5,479-480,10,1,1580272,
+,"2-Bromo-1,4-dihydroxy-9,10-anthraquinone",1,0,0,0,0,,1,0.27813,3.595440981,,485,,10,1,1025364,
+,Cladospirone B,1,0,0,0,0,,1,0.37981,2.632895395,,503,,15,8,142793,
+,"5,10-Dihydroxy-1,3-dihydro-1,3-dimethyl-9-methoxy-2H-naphtho(2,3-c)pyran-4-one",1,0.5,1,0,0,,1,0.34759,2.876952732,,408,,9,5,1147307,
+,"(2'S,4aS)-4,4a-Dihydro-5,6,8-trihydroxy-7-(2'-hydroxypropyl)-1,2,4a-trimethylphenanthrene-3,9-dione",1,1.5,1,1,0,,1,0.4401,2.272210861,,461.75,187.5-190C,5,9,1153332,
+,"(E)-2-[3-(Trifluoromethyl)phenyliminomethyl]benzene-1,4-diol",1,1,0,0,2,,2,0.31105,3.214917216,,405.5,404-407,12,1,754324,
+,"3,6-Dihydroxy-1a-(3-methyl-2-butenyl)naphth(2,3-b)oxirene-2,7(1aH,7aH)-dione",1,2,1,0,2,,1,0.327565,3.052829209,,358.5,85-86C,5,6,1160869,
+,4-Hydroxy-2-methylsulfonylphenol,1,0.5,0,1,0,,1,0.2003275,4.991825885,,416.5,416-417,6,1,1163829,
+,"2,3-Dichloro-1,4-dihydroxyanthraquinone",2,0,0,0,0,,1,0.29958,3.338006542,,521,,14,1,1164545,
+,"1-(2,5-Dihydroxy-4,6-dimethoxyphenyl)-3-(3,4-dimethoxyphenyl)propenone",1,5.5,4,0,3,,2,0.42609,2.346922012,,444.5,171-172C,12,1,217832,
+,"3,6-Dihydroxy-2,4-dimethoxyacetophenone",1,2,2,0,1,,1,0.247825,4.035105417,,430,429-431,6,1,217833,
+,"16(S)-12,16-Epoxy-11,14-dihydroxy-6-methoxy-17(15-16)-abeo-abiŒ∑-5,8,11,13-teraen-7-one",1,0.5,1,0,0,,1,0.4638675,2.155788021,,478,204-206C,4,13,1172118,
+,"2-(3,7-Dimethylocta-2,6-dienyl)-1,3,5,8-tetrahydroxyxanthone",1,4.5,3,0,4,,1,0.482705,2.071658674,,480,479-481,14,1,294138,
+,"2-(4Œ≤-Methyltetrahydrofuran-2Œ±-yl)-5-(4Œ≤-methyltetrahydrofuran-2Œ≤-yl)-1,4-dihydroxybenzene",2,0.5,0,0,0,,3,0.3786625,2.640874129,,479,478-480,6,10,136572,
+,"2,5-bis(1-Piperidinylmethyl)benzene-1,4-diol ",2,2.5,2,0,0,,3,0.42216,2.368770135,,470,469-471,6,12,248780,
+,"2-(((diphenylmethyl)imino)methyl)benzene-1,4-diol",1,1.5,0,1,2,,3,0.392985,2.544626385,,426,,18,1,1509519,
+,"5,8-dihydroxy-2,2-dimethyl-2H-1-benzopyran-6,7-dicarbaldehyde",1,0,0,0,2,,1,0.28395,3.521746786,,464,,5,5,1886619,
+,"2,2-dimethyl-6,7-bis[(piperidin-1-yl)methyl]-2H-1-benzopyran-5,8-diol",1,2,2,0,0,,3,0.526635,1.898848348,,453,,5,17,1890051,
+,"2-(2',5'-Dihydroxyphenyl)-4,4,5,5-tetramethyl-4,5-dihydro-1H-imidazolyl-1-oxyl-3-oxide",1,0,0,0,0,,2,0.331305,3.018366762,,382,,6,5,1206721,
+,"(3-Benzoyl-1,4-dihydroxy-2-naphthyl)phenylmethanone",2,0.5,0,0,2,,3,0.45433,2.201043295,,417.5,144-145C,22,1,161442,
+,"2-Methyl-1,4-dihydroxynaphthalene",1,0,0,0,0,,1,0.218055,4.585998945,,454,,10,1,1211007,
+,"1-(1,4-Dihydroxynaphthalen-2-yl)propan-1-one",1,1,1,0,1,,1,0.26052875,3.838347975,,438,164-165C,10,1,692479,
+,"1-(1,4-Dihydroxynaphthalen-2-yl)heptan-1-one",1,5,5,0,1,,1,0.3577425,2.79530668,,413.5,139-142C,10,1,692480,
+,"2,5-bis(Morpholinomethyl)hydroquinone",2,2.5,2,0,0,,3,0.40103,2.493579034,,481,207-209,6,12,264918,
+,"3-Methyl-5,7,8-trihydroxy-2-aza-9,10-anthraquinone",1,0,0,0,0,,1,0.278015,3.596928223,,590,,14,1,1216570,
+,Gerardianin A,1,0,0,0,0,,1,0.4326275,2.311457316,,477,,4,13,1224445,
+,"3,5,8,10-tetrahydroxy-6-methyl-1,3,4,4a,9a,10-hexahydroanthracen-9(2H)-one",1,0,0,0,0,,1,0.3307525,3.023408742,,509,,5,9,1474482,
+,"3,5,8,10-tetrahydroxy-6-(hydroxymethyl)-1,3,4,4a,9a,10-hexahydroanthracen-9(2H)-one",1,0,1,0,0,,1,0.335065,2.984495546,,524,250-252C,5,9,1480635,
+,"1,4-Dihydroxy-2,3,5,6-tetracyanobenzene",4,0,0,0,0,,1,0.22328,4.478681476,,524,,6,1,1229801,
+,"3,6-Dihydroxy-exo-9-fluoro-syn-11-chloro-tricyclo(6.2.1.02,7)undeca-2(7),3,5-triene",1,0,0,0,0,,1,0.247295,4.043753412,,417,416-418,5,6,1236361,
+,Anhydrofusarubin,1,0.5,1,0,0,,1,0.31199,3.205230937,,473.5,,9,5,602058,
+,"(3aSR,4RS,11SR,11aRS)-3a,4,11,11a-Tetrahydro-4,6,9-trihydroxy-11-methoxy-2,2,3a-trimethyl-24-anthra(2,3-d)dioxol-5,10-dione",1,0.5,1,0,0,,1,0.4466925,2.238676494,,417.5,,9,8,1140573,
+,"1-(2,5-Dihydroxy-4,6-dimethoxyphenyl)-3-(4-methoxyphenyl)propenone",1,4.5,3,0,3,,2,0.40482625,2.470195547,,402,,12,1,217831,
+,"(16S)-12,16-Epoxy-6,11,14-trihydroxy-17(15-16)-abeo-abiŒ∑-5,8,11,13-tetraene-3,7-dione",1,0,0,0,0,,1,0.4371525,2.287531239,,533.5,,4,13,1194938,
+,Garciniaxanthone I,1,2,2,0,0,,2,0.50466,1.981532121,,528,,14,7,680049,
+,"1,4-Dihydro-1,2,3,4-tetrachloro-1,4-dichloromethanonaphthalene-5,8-diol",1,0,0,0,0,,1,0.34798875,2.873656117,,461,,5,6,1249864,
+," 1,4,6,9-Tetrahydro-1,2,3,4,6,7,8,9-octachloro-1,4-dichloromethano-6,9-dimethoxymethanoanthracene-5,10-diol",1,1.5,2,0,0,,1,0.589035,1.697691988,,515,,4,12,1249866,
+,"1,5,8-Trihydroxy-3-methoxyxanthone",1,0.5,1,0,0,,1,0.281345,3.554354973,,529.5,,14,1,235775,
+,2-(((4-Chlorophenyl)imino)methyl)hydroquinone,1,1,0,0,2,,2,0.277695,3.60107312,,440,439-441,12,1,731362,
+,"2,3-Dichloro-5,6-dicyano-1,4-dihydroxybenzene",2,0,0,0,0,,1,0.22629,4.419108224,,590,,6,1,1265596,
+,"Diethyl 3,6-dibromo-2,5-dihydroxyterephthalate",2,4.5,2,0,2,,6,0.3603325,2.775214559,,429,,6,1,131889,
+,"2,6-Dibenzoylhydroquinone",1,1.5,0,0,2,,3,0.38254,2.614105714,,483,,18,1,128175,
+,"1-(5,8-dihydro-1,4-dihydroxy-5,8-dioxo-2-naphthyl)-4-methylpent-3-en-1-yl cinnamate",1,5,2,1,5,,2,0.51036,1.959401207,,366.5,,16,1,174838,
+,Aureoquinone,1,0,0,0,0,,1,0.26522875,3.770330328,,541.5,268-269C,10,1,1278040,
+,"7,11-Dihydroxy-3,4,8,11b-tetramethyl-1,8,9,11b-tetrahydrophenanthro[3,2-b]furan-2,6-dione",1,0,0,0,0,,1,0.420415,2.378602096,,548,,4,13,821799,
+,"(R)-2,3,4,4a-Tetrahydro-5,8,10-trihydroxy-6-methoxy-1,1,4a-trimethyl-7-(1-methylethyl)-9-(1H)-phenanthrenone",1,1.5,1,1,0,,1,0.34337,2.912310336,,445.5,,5,9,1285108,
+,"(4aS,10aR)-2,3,4,4a,10,10a-Hexahydro-5,8-dihydroxy-7-isopropyl-6-methoxy-1,1-dimethylphenanthren-9(1H)-one",1,1.5,1,1,0,,1,0.4525,2.209944751,,466,,5,9,258067,
+,"1,4-Dihydroxy-2,3-bis(3',5'-dimethylpyrazol-1'-yl)benzene ",2,0.5,0,0,0,,3,0.396488333,,,554,,16,1,1257332,
