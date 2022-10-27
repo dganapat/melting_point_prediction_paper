@@ -4,7 +4,6 @@ Paper written with streamlit
 
 Only the files and scripts required for publication are included in this repo.
 
-
 Virtual Environment Information:
     * Make sure you have conda installed on your computer and up to date
     * Following these instructions: https://uoa-eresearch.github.io/eresearch-cookbook/recipe/2014/11/20/conda/
@@ -16,15 +15,27 @@ Virtual Environment Information:
 
 * Python 3.7.9 64-bit
 * Packages to install (with commands):
-    * pip install streamlit
     * conda install -c rdkit rdkit
     * conda install -c mordred-descriptor mordred
 
 All other required packages are installed as dependencies of the above packages. These packages are all that's needed for both Wunmi's automated physics-based model generation script and Antonio's machine learning model using Reaxys data.
 
-Once you've installed all the packages you need in your virtual environment, in the terminal in vscode streamlit run mp_prediction_paper.py. A link should be outputted which you can open in a browser window. The easiest way to edit and  view your code is by split-screening your coding editor (ex. vscode) and the streamlit browser. If you make changes in your script you can refresh the streamlit window (ex. cmd+r) or clicking rerun in the top right corner. Pressing run in your coding editor won't do anything in streamlit.
-
-Notes:
-
-* Some blocks of code are hidden inside "regions". To open them up, just click on the little arrow next to where you see the code #region...
-* The hydroquinone ML dataset is really sensitive to the test-train split. On most runs, it doesn't track the ideal line as well as the benzoquinone plot does. I need to compare this to the aionics output to see if they have the same issue (Update: the data does have the same issue, so this is inherent to our hydroquinone dataset, not our method).
+Repository Structure:
+* Archive:
+    * Old plots, errors, and parameters from previous model iterations. No longer used
+* Data Files:
+    * Entropy and Volume Data - Hydrocarbons.csv (Thermodynamic Features for Thermodynamic Model for Hydrocarbons)
+    * Entropy and Volume Data - Hydroquinones.csv (Thermodynamic Features for Thermodynamic Model for Hydroquinones)
+    * Entropy and Volume Data - Quinones.csv (Thermodynamic Features for Thermodynamic Model for Quinones)
+    * featurized_bq.csv (Mordred Features for ML Models for Quinones)
+    * featurized_hq.csv (Mordred Features for ML Models for Hydroquinones)
+    * parsed_p_benzoquinone_216.csv (Reaxys data for Quinones)
+    * parsed_p_hydroquinone_204.csv (Reaxys data for Hydroquinones)
+* Errors:
+    * csv files for errors (AAEs and RMSEs) for all datasets and model structures
+* Parameters:
+    * csv files for parameters/coefficients for all datasets and model structures
+* Plots:
+    * png files flots for all datasets and model structures. Plots are from the last run of the model (last random train - test split)
+* mp_prediction_models.ipynb: 
+    * main notebook for analysis. Model functions are defined in a cell and can be called as desired in subsequent cells
