@@ -4,7 +4,6 @@ Paper written with streamlit
 
 Only the files and scripts required for publication are included in this repo.
 
-I'm making this repository to clean up all the code that we use to write our paper. If we use streamlit we can integrate our paper with our plots and the code for the plots so everything is all in one place and can be updated live. This repository will also be better organized so that we only have the plots and the scripts that we need. We can choose to show snippets of our code in the paper if we want, and also this will upload well as the SI for our paper when we submit it.
 
 Virtual Environment Information:
     * Make sure you have conda installed on your computer and up to date
