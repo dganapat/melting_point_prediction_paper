@@ -1,4 +1,4 @@
-Compound,Chemical Name,sigma,tau,SP3 (LIN),SP3 (BR),SP2,ROT,Ring,V_m (nm3),1/V_m,r_m (nm),T_m (K),T_m range (K),Eccentricity(Ear),Eccentricity(Eal),T_m Source,Link for V_m,,,,,,,
+Compound,Chemical Name,sigma,tau,SP3 (LIN),SP3 (BR),SP2,ROT,Ring,V_m (nm3),1/V_m,r_m (nm),T_m (K),T_m range (K),Eccentricity(Ear),Eccentricity(Eal),CCDC Deposition Number,Link for V_m,,,,,,,
 Q1,p-benzoquinone,4,0,0,0,0,,1,0.137084453,7.29477323,0.31986486,387,,6,1,638504,https://pubs.acs.org/doi/full/10.1021/cg0605943,,,,,,,CCDC Website: https://www-ccdc-cam-ac-uk.stanford.idm.oclc.org/structures/?
 Q2,2-methyl-p-benzoquinone,1,0,0,0,0,,1,0.1554,6.435006435,0.33351917,339.5,,6,1,,https://materials-springer-com.stanford.idm.oclc.org/googlecdn/assets/sm_lbs/399/sm_lbs_978-3-540-38203-4_21/sm_lbs_978-3-540-38203-4_21.pdf?trackRequired=true&originUrl=/lb/docs/sm_lbs_978-3-540-38203-4_21,,,,,,,
 Q27,tetrachloro-p-benzoquinone,4,0,0,0,0,,1,0.207371814,4.822256125,0.367186782,562,,6,1,1267771,,,,,,,,
@@ -13,9 +13,9 @@ Q22,2-isopropyl-5-methyl-p-benzoquinone,1,0.5,0,1,0,,1,0.236265,4.2325355,0.3835
 Q14,"2,6-dimethoxy-p-benzoquinone",2,1.5,2,0,0,,1,0.19129,5.227664802,0.35743841,528,526-528,6,1,1142926,,,,,,,,
 Q24,"2,3-dimethoxy-5-methyl-p-benzoquinone",1,1.5,2,0,0,,1,0.221875,4.507042254,0.375554745,332,331-333,6,1,1212592,https://materials-springer-com.stanford.idm.oclc.org/googlecdn/assets/sm_lbs/407/sm_lbs_978-3-540-38203-4_29/sm_lbs_978-3-540-38203-4_29.pdf?trackRequired=true&originUrl=/lb/docs/sm_lbs_978-3-540-38203-4_29,,,,,,,
 ,"1,4-naphtoquinone",2,0,0,0,0,,1,0.18468382,5.4146595,0.353275413,400.25,399-401.5,11,1,,Density:https://cameochemicals.noaa.gov/chemical/16228,,,,,,,
-,menadione,1,0,0,0,0,,1,0.211,4.739336493,0.369315852,380,,11,1,,https://www-ccdc-cam-ac-uk.stanford.idm.oclc.org/structures/WebCSD/StructureSearch,,,,,,,
-,"2-Tert-Butyl-1,4-BenzoQuinone",1,0.5,0,1,0,,1,0.2318275,4.313552102,0.381088153,329,327-331,6,1,https://www.sigmaaldrich.com/catalog/product/aldrich/429074?lang=en&region=US,,,,,,,,
-,"2,3-Dimethyl-p-benzoquinone",4,0,0,0,0,,1,0.1812175,5.518230855,0.351051238,328.15,,6,1,https://pubchem.ncbi.nlm.nih.gov/compound/2_3-Dimethyl-p-benzoquinone#section=Experimental-Properties,,,,,,,,
+,menadione,1,0,0,0,0,,1,0.211,4.739336493,0.369315852,380,,11,1,229591,Reaxys ID: 1908453,,,,,,,
+,"2-Tert-Butyl-1,4-BenzoQuinone",1,0.5,0,1,0,,1,0.2318275,4.313552102,0.381088153,329,327-331,6,1,,https://www.sigmaaldrich.com/catalog/product/aldrich/429074?lang=en&region=US,,,,,,,
+,"2,3-Dimethyl-p-benzoquinone",4,0,0,0,0,,1,0.1812175,5.518230855,0.351051238,328.15,,6,1,,https://pubchem.ncbi.nlm.nih.gov/compound/2_3-Dimethyl-p-benzoquinone#section=Experimental-Properties,,,,,,,
 ,"2,5-Dihydroxy-3,6-Dimethylbenzo-1,4-Quinone",2,0,0,0,0,,1,0.18788759,5.322331293,0.355306508,473,,6,1,,https://www-degruyter-com.stanford.idm.oclc.org/view/journals/zkri/184/3-4/article-p289.xml,,,,,,,
 ,2-[(E)-2-phenylethenyl]anthraquinone,1,1,0,0,2,,2,0.3714675,2.692025547,0.445941001,469,468-470,21,1,Reaxys ID:,5380562,"Sugihara, Toru; Satoh, Tetsuya; Miura, Masahiro; Nomura, Masakatsu[Advanced Synthesis and Catalysis, 2004, vol. 346, # 13-15, p. 1765 - 1772]",,,,,,
 ,"4,5-Bis(Dimethylamino)Benzo-1,2-Quinone",2,1.5,0,2,0,,1,0.25032,3.994886545,0.39096299,422,,6,1,Reaxys ID:,2108382,"Horner; Lang[Chemische Berichte, 1956, vol. 89, p. 2768,2773]",,,,,,

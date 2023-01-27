@@ -1,4 +1,4 @@
-﻿Compound,Chemical Name,sigma,tau,SP3 (LIN),SP3 (BR),SP2,ROT,Ring,V_m (nm3),1/V_m,r_m (nm),T_m (K),T_m range (K),Eccentricity(Ear),Eccentricity(Eal),CCDC Number,Notes
+﻿Compound,Chemical Name,sigma,tau,SP3 (LIN),SP3 (BR),SP2,ROT,Ring,V_m (nm3),1/V_m,r_m (nm),T_m (K),T_m range (K),Eccentricity(Ear),Eccentricity(Eal),CCDC Deposition Number,Notes
 ,"2,3-dimethoxy-5-methyl-1,4-benzenediol",1,1.5,2,0,0,,1,0.234695,4.260849187,,349.25,,6,1,643164,
 ,"Methyl 2,5-dihydroxybenzoate",1,1,1,0,1,,1,0.1938825,5.157763078,,356.95,,6,1,214606,
 ,"2,5-dihydroxybenzaldehyde",1,0,0,0,1,,1,0.1583675,6.314426887,,370,,6,1,674088,Measurement temp = 173 K so crystal structure might not be accurate at room temperature
@@ -93,4 +93,4 @@ Q25H,"2,3,5-trimethyl-1,4-hydroquinone",1,0,0,0,0,,1,0.197915,5.052674128,,442,,
 ,"7,11-Dihydroxy-3,4,8,11b-tetramethyl-1,8,9,11b-tetrahydrophenanthro[3,2-b]furan-2,6-dione",1,0,0,0,0,,1,0.420415,2.378602096,,548,,4,13,821799,
 ,"(R)-2,3,4,4a-Tetrahydro-5,8,10-trihydroxy-6-methoxy-1,1,4a-trimethyl-7-(1-methylethyl)-9-(1H)-phenanthrenone",1,1.5,1,1,0,,1,0.34337,2.912310336,,445.5,,5,9,1285108,
 ,"(4aS,10aR)-2,3,4,4a,10,10a-Hexahydro-5,8-dihydroxy-7-isopropyl-6-methoxy-1,1-dimethylphenanthren-9(1H)-one",1,1.5,1,1,0,,1,0.4525,2.209944751,,466,,5,9,258067,
-,"1,4-Dihydroxy-2,3-bis(3',5'-dimethylpyrazol-1'-yl)benzene ",2,0.5,0,0,0,,3,0.396488333,,,554,,16,1,1257332,
+,"1,4-Dihydroxy-2,3-bis(3',5'-dimethylpyrazol-1'-yl)benzene ",2,0.5,0,0,0,,3,0.396488333,2.52214233,,554,,16,1,1257332,
