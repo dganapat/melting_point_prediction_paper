@@ -1,0 +1,4 @@
+,Train AAE,Test AAE,Train RMSE,Test RMSE,Train R^2,Test R^2
+Run 1,11.787,31.521,15.329,40.975,0.946,0.584
+Mean,11.787,31.521,15.329,40.975,0.946,0.584
+95% CI,"(nan, nan)","(nan, nan)","(nan, nan)","(nan, nan)","(nan, nan)","(nan, nan)"
